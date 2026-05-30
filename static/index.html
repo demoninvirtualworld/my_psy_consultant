@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI心理陪伴助手 · 在线心理咨询平台</title>
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5B8C5A',
+                        secondary: '#7EC8A0',
+                        accent: '#E8B86D',
+                        warm: '#FDF6EE',
+                        calm: '#E8F4F8',
+                        deep: '#2D4059',
+                        soft: '#F9F7F4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --font-cn: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif;
+            --primary: #5B8C5A;
+            --primary-light: #E8F5E9;
+            --accent: #E8B86D;
+            --danger: #C0392B;
+            --bg-warm: #FDF6EE;
+            --bg-calm: #E8F4F8;
+            --text-dark: #2D4059;
+            --text-mid: #4A5568;
+            --text-light: #718096;
+            --border-soft: #E8E0D8;
+            --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: var(--font-cn);
+            background: var(--bg-warm);
+            color: var(--text-dark);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* 聊天气泡 */
+        .chat-bubble-user {
+            background: #E8F5E9;
+            color: #1B4332;
+            border-radius: 18px 18px 4px 18px;
+            padding: 12px 16px;
+            max-width: 72%;
+            margin-left: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
+        .chat-bubble-ai {
+            background: #FFFFFF;
+            border: 1px solid #E8E0D8;
+            color: #2D4059;
+            border-radius: 18px 18px 18px 4px;
+            padding: 12px 16px;
+            max-width: 72%;
+            margin-right: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            word-break: break-word;
+            font-size: 0.95rem;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.35s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 量表菜单项 */
+        .scale-menu-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        }
+        .scale-menu-item:hover {
+            background: #F0F7F0;
+            border-left-color: var(--primary);
+        }
+        .scale-menu-item.completed {
+            border-left-color: #5B8C5A;
+            background: #F8FCF8;
+        }
+        .scale-menu-item.active {
+            background: #E8F5E9;
+            border-left-color: #2E7D32;
+            font-weight: 600;
+        }
+        .scale-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .scale-badge.done {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .scale-badge.pending {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        .scale-badge.in-progress {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+        }
+
+        /* 按钮 */
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-cn);
+        }
+        .btn-primary:hover {
+            background: #4A7A49;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(91, 140, 90, 0.3);
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-family: var(--font-cn);
+        }
+        .btn-outline:hover {
+            background: #F0F7F0;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D0C8BC;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #B0A89C;
+        }
+
+        /* 量表选项 */
+        .scale-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border: 1.5px solid #E8E0D8;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.9rem;
+        }
+        .scale-option:hover {
+            border-color: var(--primary);
+            background: #FAFAF8;
+        }
+        .scale-option.selected {
+            border-color: var(--primary);
+            background: #E8F5E9;
+            font-weight: 500;
+        }
+        .scale-option input[type="radio"] {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+        }
+
+        /* 上传区域 */
+        .upload-zone {
+            border: 2px dashed #D0C8BC;
+            border-radius: var(--radius-md);
+            padding: 28px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+            background: #FAFAF8;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: #F5F9F5;
+        }
+
+        /* 标签 */
+        .tech-tag {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1.5px solid #E8E0D8;
+            background: #fff;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .tech-tag.selected {
+            background: #E8F5E9;
+            border-color: var(--primary);
+            color: #2E7D32;
+            font-weight: 500;
+        }
+        .tech-tag:hover {
+            border-color: var(--primary);
+            background: #F5F9F5;
+        }
+
+        /* 画像面板 */
+        .profile-section {
+            background: #fff;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid #F0EBE3;
+        }
+        .profile-section h4 {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .profile-tag {
+            display: inline-block;
+            background: #F5F0E8;
+            color: #6B5E4A;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            margin: 2px 4px 2px 0;
+        }
+
+        @media (max-width: 768px) {
+            .chat-bubble-user,
+            .chat-bubble-ai {
+                max-width: 88%;
+            }
+            .scale-menu-item {
+                font-size: 0.85rem;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-fade-in {
+                animation: none;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#FDF6EE]">
+
+    <!-- ==================== 顶部导航 ==================== -->
+    <header class="bg-white shadow-sm border-b border-[#E8E0D8] sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B8C5A] to-[#7EC8A0] flex items-center justify-center text-white text-xl" aria-hidden="true">🧠</div>
+                <div>
+                    <h1 class="text-lg font-bold text-[#2D4059]">AI心理陪伴助手</h1>
+                    <p class="text-xs text-[#718096]">在线心理评估 · 智能对话 · 情绪疏导</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="user-info" class="hidden flex items-center gap-2 text-sm text-[#4A5568]">
+                    <span id="current-user-name" class="font-medium"></span>
+                    <span id="user-badge" class="text-xs bg-[#E8F5E9] text-[#2E7D32] px-2 py-0.5 rounded-full"></span>
+                </div>
+                <button id="login-btn" class="btn-primary text-sm px-4 py-2">🔑 登录/注册</button>
+                <button id="logout-btn" class="hidden text-[#718096] hover:text-[#C0392B] transition-colors p-2 rounded-lg hover:bg-red-50 text-sm">🚪 退出</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== 未登录内容 ==================== -->
+    <div id="guest-content" class="flex-1 flex items-center justify-center p-8">
+        <div class="text-center max-w-lg">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#E8F5E9] to-[#C8E6C9] flex items-center justify-center text-4xl">🧠</div>
+            <h2 class="text-2xl font-bold text-[#2D4059] mb-4">欢迎来到AI心理陪伴助手</h2>
+            <p class="text-[#4A5568] mb-2 leading-relaxed">本平台提供<strong>心理测量评估</strong>、<strong>智能对话疏导</strong>及<strong>情绪管理建议</strong>，帮助您更好地了解自己的心理状态。</p>
+            <p class="text-sm text-[#718096] mb-6">⚠️ 本平台仅供日常心理调适，不构成医疗诊断。如有严重困扰请寻求专业帮助。</p>
+            <button id="guest-login-btn" class="btn-primary text-lg px-8 py-3">🔑 登录或注册开始使用</button>
+        </div>
+    </div>
+
+    <!-- ==================== 主应用布局（登录后显示） ==================== -->
+    <div id="app-content" class="hidden flex-1 flex">
+        <!-- 左侧边栏 -->
+        <aside id="sidebar" class="w-72 bg-white border-r border-[#E8E0D8] flex flex-col overflow-y-auto flex-shrink-0 hidden lg:flex" style="min-height: calc(100vh - 64px);">
+            <!-- 量表菜单 -->
+            <div class="p-4 border-b border-[#E8E0D8]">
+                <h3 class="text-sm font-semibold text-[#718096] uppercase tracking-wider mb-3">📋 心理测量量表</h3>
+                <div id="scale-menu-list" class="space-y-1">
+                    <div class="text-center py-3 text-sm text-[#B0A89C]">加载中...</div>
+                </div>
+            </div>
+            <!-- 咨询技术 -->
+            <div class="p-4 border-b border-[#E8E0D8]">
+                <h3 class="text-sm font-semibold text-[#718096] uppercase tracking-wider mb-3">🎯 咨询技术偏好</h3>
+                <div id="tech-tags-container" class="flex flex-wrap gap-2">
+                    <span class="text-sm text-[#B0A89C]">请先登录</span>
+                </div>
+                <button id="save-tech-prefs" class="mt-3 text-xs text-[#5B8C5A] hover:underline hidden">保存偏好</button>
+            </div>
+            <!-- 病历上传 -->
+            <div class="p-4 border-b border-[#E8E0D8]">
+                <h3 class="text-sm font-semibold text-[#718096] uppercase tracking-wider mb-3">📁 病历资料</h3>
+                <div id="upload-zone" class="upload-zone text-sm">
+                    <span class="text-2xl">📄</span>
+                    <p class="text-[#718096] mt-1">点击或拖拽上传病历<br><span class="text-xs text-[#B0A89C]">支持PDF、图片 (≤10MB)</span></p>
+                </div>
+                <input type="file" id="file-input" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.webp">
+                <div id="uploaded-files-list" class="mt-2 space-y-1 text-xs"></div>
+            </div>
+            <!-- 免责声明 -->
+            <div class="p-4 mt-auto">
+                <button id="show-disclaimer-btn" class="text-xs text-[#718096] hover:text-[#C0392B] underline w-full text-left">⚠️ 查看免责声明</button>
+            </div>
+        </aside>
+
+        <!-- 移动端侧边栏切换按钮 -->
+        <button id="sidebar-toggle" class="lg:hidden fixed bottom-5 left-5 z-50 w-12 h-12 rounded-full bg-[#5B8C5A] text-white shadow-lg flex items-center justify-center text-xl">☰</button>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 flex flex-col min-w-0">
+            <!-- 对话区 -->
+            <div id="chat-area" class="flex-1 flex flex-col">
+                <div class="p-3 border-b border-[#E8E0D8] bg-white flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#7EC8A0] to-[#5B8C5A] flex items-center justify-center text-white text-sm">AI</div>
+                    <div>
+                        <span class="font-medium text-[#2D4059] text-sm">AI心理陪伴助手</span>
+                        <span id="chat-status" class="text-xs text-[#B0A89C] ml-2">在线 · 等待对话</span>
+                    </div>
+                </div>
+                <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-[#FDF8F3]" role="log" aria-live="polite">
+                    <div class="text-center py-10">
+                        <span class="text-5xl">🧠</span>
+                        <h3 class="text-lg font-semibold text-[#2D4059] mt-4 mb-2">您好，我是您的AI心理陪伴助手</h3>
+                        <p class="text-[#718096] max-w-md mx-auto text-sm">请先完成<strong>心理测量量表</strong>，这将帮助我更好地了解您。您也可以在左侧选择<strong>咨询技术偏好</strong>，或直接开始对话。</p>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-[#E8E0D8] bg-white">
+                    <div class="flex gap-3">
+                        <label for="message-input" class="sr-only">输入消息</label>
+                        <textarea id="message-input" placeholder="请在此输入您想说的话...（Enter发送，Shift+Enter换行）" class="flex-1 border border-[#E8E0D8] rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] focus:border-[#5B8C5A] resize-none text-sm" rows="2" maxlength="800" aria-label="消息输入框"></textarea>
+                        <button id="send-btn" class="btn-primary self-end px-5 py-3 rounded-xl flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed" disabled aria-label="发送消息">📨 发送</button>
+                    </div>
+                    <div class="flex justify-between text-xs text-[#B0A89C] mt-2">
+                        <span>您的对话内容将被严格保密</span>
+                        <span id="char-count">0/800</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧画像面板（桌面端） -->
+            <aside id="profile-panel" class="w-80 bg-white border-l border-[#E8E0D8] overflow-y-auto flex-shrink-0 hidden xl:block p-4" style="max-height: calc(100vh - 64px);">
+                <h3 class="text-sm font-semibold text-[#718096] uppercase tracking-wider mb-4">📊 用户画像</h3>
+                <div id="profile-content">
+                    <div class="text-center py-6 text-sm text-[#B0A89C]">
+                        <span class="text-3xl block mb-2">📋</span>
+                        <p>完成量表后将在此<br>显示您的心理画像</p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- ==================== 登录/注册模态框 ==================== -->
+    <div id="auth-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="flex justify-between items-center p-5 border-b border-[#E8E0D8]">
+                <h3 id="auth-title" class="text-lg font-bold text-[#2D4059]">🔑 用户登录 / 注册</h3>
+                <button id="close-auth" class="text-[#B0A89C] hover:text-[#2D4059] p-1 text-xl leading-none" aria-label="关闭">✕</button>
+            </div>
+            <div class="p-5">
+                <div id="login-form" class="space-y-4">
+                    <h4 class="font-semibold text-[#2D4059]">登录账户</h4>
+                    <div><label for="login-username" class="block text-sm text-[#4A5568] mb-1">用户名</label><input type="text" id="login-username" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="请输入用户名" autocomplete="username"></div>
+                    <div><label for="login-password" class="block text-sm text-[#4A5568] mb-1">密码</label><input type="password" id="login-password" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="请输入密码" autocomplete="current-password"></div>
+                    <button id="submit-login" class="btn-primary w-full py-3">登录</button>
+                    <div class="text-center"><button id="switch-to-register" class="text-[#5B8C5A] text-sm hover:underline">没有账户？立即注册</button></div>
+                </div>
+                <div id="register-form" class="space-y-4 hidden">
+                    <h4 class="font-semibold text-[#2D4059]">注册新账户</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label for="reg-username" class="block text-sm text-[#4A5568] mb-1">用户名</label><input type="text" id="reg-username" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="用户名" autocomplete="username"></div>
+                        <div><label for="reg-password" class="block text-sm text-[#4A5568] mb-1">密码</label><input type="password" id="reg-password" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="密码" autocomplete="new-password"></div>
+                    </div>
+                    <div><label for="reg-name" class="block text-sm text-[#4A5568] mb-1">姓名（选填）</label><input type="text" id="reg-name" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="您的称呼"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label for="reg-age" class="block text-sm text-[#4A5568] mb-1">年龄</label><input type="number" id="reg-age" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="年龄" min="10" max="100"></div>
+                        <div><label for="reg-gender" class="block text-sm text-[#4A5568] mb-1">性别</label><select id="reg-gender" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="other">其他</option></select></div>
+                    </div>
+                    <button id="submit-register" class="btn-primary w-full py-3" style="background:#7EC8A0;">注册</button>
+                    <div class="text-center"><button id="switch-to-login" class="text-[#5B8C5A] text-sm hover:underline">已有账户？立即登录</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 免责声明模态框 ==================== -->
+    <div id="disclaimer-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="disclaimer-title" class="text-lg font-bold text-[#C0392B]">⚠️ 免责声明</h3>
+                <button id="close-disclaimer" class="text-[#B0A89C] hover:text-[#2D4059] text-xl leading-none" aria-label="关闭">✕</button>
+            </div>
+            <div class="text-sm text-[#4A5568] leading-relaxed space-y-3 bg-[#FFF8F6] border border-[#F5D0C5] rounded-xl p-5">
+                <p><strong>AI心理陪伴助手</strong>（以下简称"本平台"）仅供<strong>日常心理调适、情绪疏导及心理健康知识普及</strong>使用，不构成医疗诊断、治疗建议或任何形式的专业心理咨询服务。</p>
+                <p>本平台提供的心理测量问卷结果仅为<strong>自评参考</strong>，不能替代专业心理评估和临床诊断。若您正在经历严重的心理困扰、情绪危机，或存在自伤、自杀风险，请<strong>立即拨打当地心理危机干预热线</strong>（如全国心理援助热线：<strong>400-161-9995</strong>），或前往就近医院的精神科/心理科就诊。</p>
+                <p>本平台建议有持续心理困扰的用户<strong>寻求具有专业资质的心理咨询师或医疗机构</strong>进行面对面咨询和治疗。使用本平台即表示您已阅读、理解并同意上述全部条款。平台运营方及技术提供方不对因使用本平台信息而产生的任何直接或间接后果承担法律责任。</p>
+            </div>
+            <button id="acknowledge-disclaimer" class="btn-primary w-full mt-5">我已了解并同意</button>
+        </div>
+    </div>
+
+    <!-- ==================== 量表测量模态框 ==================== -->
+    <div id="scale-modal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex justify-between items-center p-5 border-b border-[#E8E0D8]">
+                <h3 id="scale-modal-title" class="text-lg font-bold text-[#2D4059]">📋 心理测量量表</h3>
+                <button id="close-scale-modal" class="text-[#B0A89C] hover:text-[#2D4059] text-xl leading-none" aria-label="关闭">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-5" id="scale-modal-body">
+                <div class="text-center py-8 text-[#B0A89C]">加载中...</div>
+            </div>
+            <div class="p-4 border-t border-[#E8E0D8] flex justify-between items-center bg-[#FAFAF8]">
+                <span id="scale-progress-info" class="text-sm text-[#718096]"></span>
+                <div class="flex gap-3">
+                    <button id="scale-prev-btn" class="btn-outline text-sm hidden">← 上一页</button>
+                    <button id="scale-next-btn" class="btn-primary text-sm">下一页 →</button>
+                    <button id="scale-submit-btn" class="btn-primary text-sm hidden" style="background:#7EC8A0;">✓ 提交答卷</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 通知消息 ==================== -->
+    <div id="notification-toast" class="fixed bottom-6 right-6 bg-[#2D4059] text-white px-5 py-3 rounded-xl shadow-lg transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 z-[70] text-sm" role="alert" aria-live="assertive">
+        <span id="notification-icon">✅</span>
+        <span id="notification-text"></span>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== 配置常量 ====================
+            const CONFIG = {
+                API_BASE_URL: '/api',
+                MAX_MESSAGE_LENGTH: 800,
+                NOTIFICATION_DURATION: 3500,
+                DISCLAIMER_ACK_KEY: 'psy_disclaimer_ack',
+                SCALE_PROGRESS_PREFIX: 'psy_scale_prog_',
+                TECH_PREFS_KEY: 'psy_tech_prefs_',
+                UPLOADED_FILES_KEY: 'psy_uploaded_files_',
+                USER_PROFILE_KEY: 'psy_user_profile_',
+            };
+
+            // ==================== 咨询技术选项 ====================
+            const COUNSELING_TECHNIQUES = [
+                { id: 'cbt', name: '认知行为疗法(CBT)', desc: '识别和改变负面思维模式' },
+                { id: 'psychodynamic', name: '精神分析/心理动力学', desc: '探索潜意识与早期经历' },
+                { id: 'humanistic', name: '人本主义/来访者中心', desc: '无条件积极关注与共情' },
+                { id: 'mindfulness', name: '正念疗法', desc: '觉察当下，接纳不评判' },
+                { id: 'dbt', name: '辩证行为疗法(DBT)', desc: '情绪调节与痛苦耐受' },
+                { id: 'act', name: '接纳承诺疗法(ACT)', desc: '接纳情绪，承诺行动' },
+                { id: 'solution_focused', name: '焦点解决短期治疗', desc: '聚焦解决方案与资源' },
+                { id: 'narrative', name: '叙事疗法', desc: '重构个人生命故事' },
+            ];
+
+            // ==================== 量表数据定义 ====================
+            // 通用选项
+            const OPT_FREQ_4 = [
+                { value: 0, label: '完全不会(0)' }, { value: 1, label: '几天(1)' },
+                { value: 2, label: '一半以上天数(2)' }, { value: 3, label: '几乎每天(3)' }
+            ];
+            const OPT_FREQ_4_GAD = [
+                { value: 0, label: '完全不会(0)' }, { value: 1, label: '几天(1)' },
+                { value: 2, label: '一半以上天数(2)' }, { value: 3, label: '几乎每天(3)' }
+            ];
+            const OPT_FREQ_4_SDS = [
+                { value: 1, label: '没有或很少时间(1)' }, { value: 2, label: '少部分时间(2)' },
+                { value: 3, label: '相当多时间(3)' }, { value: 4, label: '绝大部分或全部时间(4)' }
+            ];
+            const OPT_FREQ_5 = [
+                { value: 1, label: '没有(1)' }, { value: 2, label: '很轻(2)' },
+                { value: 3, label: '中等(3)' }, { value: 4, label: '偏重(4)' },
+                { value: 5, label: '严重(5)' }
+            ];
+            const OPT_YES_NO = [
+                { value: 1, label: '是' }, { value: 0, label: '否' }
+            ];
+
+            // 量表配置注册表
+            const SCALE_REGISTRY = {
+                phq9: {
+                    id: 'phq9',
+                    name: 'PHQ-9 病人健康问卷抑郁量表',
+                    shortName: 'PHQ-9',
+                    description: '用于筛查抑郁症状及评估严重程度（近2周）',
+                    category: '抑郁',
+                    questions: [
+                        { id: 'q1', text: '做事时提不起劲或没有兴趣' },
+                        { id: 'q2', text: '感到心情低落、沮丧或绝望' },
+                        { id: 'q3', text: '入睡困难、睡不安稳或睡眠过多' },
+                        { id: 'q4', text: '感觉疲倦或没有活力' },
+                        { id: 'q5', text: '食欲不振或吃太多' },
+                        { id: 'q6', text: '觉得自己很糟——或觉得自己很失败，或让自己或家人失望' },
+                        { id: 'q7', text: '对事物专注有困难，例如阅读报纸或看电视时' },
+                        { id: 'q8', text: '动作或说话速度缓慢到别人已经觉察？或正好相反——烦躁或坐立不安、动来动去的情况更胜于平常' },
+                        { id: 'q9', text: '有不如死掉或用某种方式伤害自己的念头' },
+                    ],
+                    options: OPT_FREQ_4,
+                    scoring: (answers) => {
+                        const total = Object.values(answers).reduce((s, v) => s + (parseInt(v) || 0), 0);
+                        let level, suggestion;
+                        if (total <= 4) { level = '无抑郁症状';
+                            suggestion = '您的抑郁水平在正常范围内。'; } else if (total <= 9) { level = '轻度抑郁';
+                            suggestion = '建议关注情绪变化，保持健康生活习惯。'; } else if (total <= 14) { level = '中度抑郁';
+                            suggestion = '建议考虑心理咨询或与信任的人倾诉。'; } else if (total <= 19) { level = '中重度抑郁';
+                            suggestion = '强烈建议寻求专业心理咨询师的帮助。'; } else { level = '重度抑郁';
+                            suggestion = '请尽快联系专业心理医生或拨打心理援助热线。'; }
+                        return { total, maxScore: 27, level, suggestion,
+                            interpretation: `总分${total}分（满分27分）：${level}` };
+                    }
+                },
+                gad7: {
+                    id: 'gad7',
+                    name: 'GAD-7 广泛性焦虑障碍量表',
+                    shortName: 'GAD-7',
+                    description: '用于筛查广泛性焦虑障碍及评估严重程度（近2周）',
+                    category: '焦虑',
+                    questions: [
+                        { id: 'q1', text: '感觉紧张、焦虑或急切' },
+                        { id: 'q2', text: '不能够停止或控制担忧' },
+                        { id: 'q3', text: '对各种各样的事情担忧过多' },
+                        { id: 'q4', text: '很难放松下来' },
+                        { id: 'q5', text: '由于不安而无法静坐' },
+                        { id: 'q6', text: '变得容易烦恼或急躁' },
+                        { id: 'q7', text: '感到似乎将有可怕的事情发生而害怕' },
+                    ],
+                    options: OPT_FREQ_4_GAD,
+                    scoring: (answers) => {
+                        const total = Object.values(answers).reduce((s, v) => s + (parseInt(v) || 0), 0);
+                        let level, suggestion;
+                        if (total <= 4) { level = '无焦虑症状';
+                            suggestion = '您的焦虑水平在正常范围内。'; } else if (total <= 9) { level = '轻度焦虑';
+                            suggestion = '可尝试放松训练和正念练习。'; } else if (total <= 14) { level = '中度焦虑';
+                            suggestion = '建议进行心理咨询，学习焦虑管理技巧。'; } else { level = '重度焦虑';
+                            suggestion = '强烈建议寻求专业心理医生的评估和帮助。'; }
+                        return { total, maxScore: 21, level, suggestion,
+                            interpretation: `总分${total}分（满分21分）：${level}` };
+                    }
+                },
+                sds: {
+                    id: 'sds',
+                    name: 'SDS 抑郁自评量表',
+                    shortName: 'SDS',
+                    description: '用于评估抑郁状态的主观感受（近1周）',
+                    category: '抑郁',
+                    questions: [
+                        { id: 'q1', text: '我觉得闷闷不乐，情绪低沉', reverse: false },
+                        { id: 'q2', text: '我觉得一天之中早晨最好', reverse: true },
+                        { id: 'q3', text: '我一阵阵哭出来或觉得想哭', reverse: false },
+                        { id: 'q4', text: '我晚上睡眠不好', reverse: false },
+                        { id: 'q5', text: '我吃得跟平常一样多', reverse: true },
+                        { id: 'q6', text: '我与异性密切接触时和以往一样感到愉快', reverse: true },
+                        { id: 'q7', text: '我发觉我的体重在下降', reverse: false },
+                        { id: 'q8', text: '我有便秘的苦恼', reverse: false },
+                        { id: 'q9', text: '我心跳比平时快', reverse: false },
+                        { id: 'q10', text: '我无缘无故地感到疲乏', reverse: false },
+                        { id: 'q11', text: '我的头脑跟平常一样清楚', reverse: true },
+                        { id: 'q12', text: '我觉得经常做的事情并没有困难', reverse: true },
+                        { id: 'q13', text: '我觉得不安而平静不下来', reverse: false },
+                        { id: 'q14', text: '我对将来抱有希望', reverse: true },
+                        { id: 'q15', text: '我比平常容易生气激动', reverse: false },
+                        { id: 'q16', text: '我觉得做出决定是容易的', reverse: true },
+                        { id: 'q17', text: '我觉得自己是个有用的人，有人需要我', reverse: true },
+                        { id: 'q18', text: '我的生活过得很有意思', reverse: true },
+                        { id: 'q19', text: '我认为如果我死了别人会生活得好些', reverse: false },
+                        { id: 'q20', text: '平常感兴趣的事我仍然照样感兴趣', reverse: true },
+                    ],
+                    options: OPT_FREQ_4_SDS,
+                    scoring: (answers) => {
+                        let rawTotal = 0;
+                        const qIds = Object.keys(answers);
+                        SCALE_REGISTRY.sds.questions.forEach(q => {
+                            const val = parseInt(answers[q.id]) || 1;
+                            rawTotal += q.reverse ? (5 - val) : val;
+                        });
+                        const standardScore = Math.round(rawTotal * 1.25);
+                        let level, suggestion;
+                        if (standardScore < 50) { level = '正常';
+                            suggestion = '您的情绪状态良好。'; } else if (standardScore < 60) { level = '轻度抑郁';
+                            suggestion = '建议关注情绪变化，适当进行户外活动。'; } else if (standardScore < 70) { level = '中度抑郁';
+                            suggestion = '建议寻求心理咨询师的帮助。'; } else { level = '重度抑郁';
+                            suggestion = '请尽快联系专业心理医生进行评估。'; }
+                        return { total: rawTotal, standardScore, maxScore: 80, level, suggestion,
+                            interpretation: `粗分${rawTotal}分，标准分${standardScore}分：${level}` };
+                    }
+                },
+                sas: {
+                    id: 'sas',
+                    name: 'SAS 焦虑自评量表',
+                    shortName: 'SAS',
+                    description: '用于评估焦虑状态的主观感受（近1周）',
+                    category: '焦虑',
+                    questions: [
+                        { id: 'q1', text: '我觉得比平常容易紧张和着急', reverse: false },
+                        { id: 'q2', text: '我无缘无故地感到害怕', reverse: false },
+                        { id: 'q3', text: '我容易心里烦乱或觉得惊恐', reverse: false },
+                        { id: 'q4', text: '我觉得我可能将要发疯', reverse: false },
+                        { id: 'q5', text: '我觉得一切都很好，也不会发生什么不幸', reverse: true },
+                        { id: 'q6', text: '我手脚发抖打颤', reverse: false },
+                        { id: 'q7', text: '我因为头痛、颈痛和背痛而苦恼', reverse: false },
+                        { id: 'q8', text: '我感觉容易衰弱和疲乏', reverse: false },
+                        { id: 'q9', text: '我觉得心平气和，并且容易安静坐着', reverse: true },
+                        { id: 'q10', text: '我觉得心跳得很快', reverse: false },
+                        { id: 'q11', text: '我因为一阵阵头晕而苦恼', reverse: false },
+                        { id: 'q12', text: '我有晕倒发作，或觉得要晕倒似的', reverse: false },
+                        { id: 'q13', text: '我吸气呼气都感到很容易', reverse: true },
+                        { id: 'q14', text: '我的手脚麻木和刺痛', reverse: false },
+                        { id: 'q15', text: '我因为胃痛和消化不良而苦恼', reverse: false },
+                        { id: 'q16', text: '我常常要小便', reverse: false },
+                        { id: 'q17', text: '我的手脚常常是干燥温暖的', reverse: true },
+                        { id: 'q18', text: '我脸红发热', reverse: false },
+                        { id: 'q19', text: '我容易入睡并且一夜睡得很好', reverse: true },
+                        { id: 'q20', text: '我做噩梦', reverse: false },
+                    ],
+                    options: OPT_FREQ_4_SDS,
+                    scoring: (answers) => {
+                        let rawTotal = 0;
+                        SCALE_REGISTRY.sas.questions.forEach(q => {
+                            const val = parseInt(answers[q.id]) || 1;
+                            rawTotal += q.reverse ? (5 - val) : val;
+                        });
+                        const standardScore = Math.round(rawTotal * 1.25);
+                        let level, suggestion;
+                        if (standardScore < 50) { level = '正常';
+                            suggestion = '您的焦虑水平在正常范围。'; } else if (standardScore < 60) { level = '轻度焦虑';
+                            suggestion = '可尝试放松训练和深呼吸练习。'; } else if (standardScore < 70) { level = '中度焦虑';
+                            suggestion = '建议进行心理咨询。'; } else { level = '重度焦虑';
+                            suggestion = '请尽快联系专业心理医生。'; }
+                        return { total: rawTotal, standardScore, maxScore: 80, level, suggestion,
+                            interpretation: `粗分${rawTotal}分，标准分${standardScore}分：${level}` };
+                    }
+                },
+                mdq: {
+                    id: 'mdq',
+                    name: 'MDQ 心境障碍问卷',
+                    shortName: 'MDQ',
+                    description: '用于筛查双相情感障碍（躁狂/轻躁狂发作史）',
+                    category: '心境障碍',
+                    questions: [
+                        { id: 'q1', text: '您曾感到异常兴奋、精力充沛或极度活跃，与平常明显不同吗？' },
+                        { id: 'q2', text: '您曾感到异常易怒，以至于对人大喊大叫、打架或争论吗？' },
+                        { id: 'q3', text: '您曾感到比平常更自信吗？' },
+                        { id: 'q4', text: '您曾感到比平常需要更少的睡眠吗？' },
+                        { id: 'q5', text: '您曾比平常更健谈或说话更快吗？' },
+                        { id: 'q6', text: '您曾感到思绪奔逸、想法一个接一个吗？' },
+                        { id: 'q7', text: '您曾感到容易分心，注意力难以集中吗？' },
+                        { id: 'q8', text: '您曾比平常更有精力去做事情吗？' },
+                        { id: 'q9', text: '您曾比平常更活跃或坐立不安吗？' },
+                        { id: 'q10', text: '您曾比平常更热衷于社交活动吗？' },
+                        { id: 'q11', text: '您曾对性更感兴趣或更活跃吗？' },
+                        { id: 'q12', text: '您曾做一些对您或他人有风险的事情吗？' },
+                        { id: 'q13', text: '您曾花钱过多以至于给您或家人带来麻烦吗？' },
+                    ],
+                    options: OPT_YES_NO,
+                    extraQuestions: [
+                        { id: 'q14', text: '如果以上有多个"是"，这些问题是否在同一时期发生？', type: 'yesno' },
+                        { id: 'q15', text: '这些问题对您的生活造成了多大程度的困扰？', type: 'severity', options: [
+                                { value: 0, label: '没有困扰' }, { value: 1, label: '轻微困扰' },
+                                { value: 2, label: '中度困扰' }, { value: 3, label: '严重困扰' }
+                            ] },
+                    ],
+                    scoring: (answers) => {
+                        const part1Count = Object.entries(answers).filter(([k, v]) => k.startsWith('q') && parseInt(
+                            k.slice(1)) <= 13 && parseInt(v) === 1).length;
+                        const q14 = parseInt(answers.q14) || 0;
+                        const q15 = parseInt(answers.q15) || 0;
+                        const positive = part1Count >= 7 && q14 === 1 && q15 >= 2;
+                        let suggestion = positive ?
+                            '筛查阳性，建议进一步进行专业双相障碍评估。' :
+                            '筛查阴性，但如有疑虑仍建议咨询专业医生。';
+                        return { part1Count, q14, q15, positive, maxScore: 13, level: positive ? '筛查阳性' : '筛查阴性',
+                            suggestion, interpretation: `第一部分${part1Count}/13项肯定，${positive?'符合':'不符合'}筛查标准` };
+                    }
+                },
+                hcl32: {
+                    id: 'hcl32',
+                    name: 'HCL-32 轻躁狂症状清单',
+                    shortName: 'HCL-32',
+                    description: '用于筛查轻躁狂发作史，辅助双相障碍诊断',
+                    category: '心境障碍',
+                    questions: Array.from({ length: 32 }, (_, i) => ({
+                        id: `q${i+1}`,
+                        text: [
+                            '睡眠需求减少', '精力更充沛', '更加自信', '更享受工作', '更爱社交',
+                            '更想旅行', '开车更快', '花钱更多', '更有冒险精神', '更加活跃',
+                            '更多计划项目', '更多创意想法', '更少害羞', '穿着更鲜艳', '更想见人',
+                            '对性更感兴趣', '更爱开玩笑', '思维更敏捷', '更容易分心', '更多兴趣爱好',
+                            '更爱运动', '更少食欲', '更能同时做多件事', '思维更清晰', '更爱学习',
+                            '更乐观', '更有竞争力', '更少焦虑', '更爱音乐', '更爱打电话',
+                            '更爱写作', '更爱整理'
+                        ][i],
+                    })),
+                    options: OPT_YES_NO,
+                    scoring: (answers) => {
+                        const total = Object.values(answers).reduce((s, v) => s + (parseInt(v) || 0), 0);
+                        const level = total >= 14 ? '筛查阳性（可能存在轻躁狂）' : '筛查阴性';
+                        const suggestion = total >= 14 ?
+                            '建议进一步进行专业双相障碍评估。' : '筛查阴性，但如有疑虑仍建议咨询专业医生。';
+                        return { total, maxScore: 32, level, suggestion,
+                            interpretation: `总分${total}/32：${level}` };
+                    }
+                },
+                scl90: {
+                    id: 'scl90',
+                    name: 'SCL-90 症状自评量表',
+                    shortName: 'SCL-90',
+                    description: '综合评估心理健康状况，涵盖9个症状维度（近1周）',
+                    category: '综合',
+                    questions: [
+                        { id: 'q1', text: '头痛', dim: '躯体化' },
+                        { id: 'q2', text: '神经过敏，心中不踏实', dim: '焦虑' },
+                        { id: 'q3', text: '头脑中有不必要的想法或字句盘旋', dim: '强迫' },
+                        { id: 'q4', text: '头晕或晕倒', dim: '躯体化' },
+                        { id: 'q5', text: '对异性的兴趣减退', dim: '抑郁' },
+                        { id: 'q6', text: '对旁人责备求全', dim: '敌对' },
+                        { id: 'q7', text: '感到别人能控制您的思想', dim: '精神病性' },
+                        { id: 'q8', text: '责怪别人制造麻烦', dim: '敌对' },
+                        { id: 'q9', text: '忘记性大', dim: '强迫' },
+                        { id: 'q10', text: '担心自己的衣饰整齐及仪态的端正', dim: '强迫' },
+                        { id: 'q11', text: '容易烦恼和激动', dim: '敌对' },
+                        { id: 'q12', text: '胸痛', dim: '躯体化' },
+                        { id: 'q13', text: '害怕空旷的场所或街道', dim: '恐惧' },
+                        { id: 'q14', text: '感到自己的精力下降，活动减慢', dim: '抑郁' },
+                        { id: 'q15', text: '想结束自己的生命', dim: '抑郁' },
+                        { id: 'q16', text: '听到旁人听不到的声音', dim: '精神病性' },
+                        { id: 'q17', text: '发抖', dim: '焦虑' },
+                        { id: 'q18', text: '感到大多数人都不可信任', dim: '偏执' },
+                        { id: 'q19', text: '胃口不好', dim: '躯体化' },
+                        { id: 'q20', text: '容易哭泣', dim: '抑郁' },
+                        { id: 'q21', text: '同异性相处时感到害羞不自在', dim: '人际关系' },
+                        { id: 'q22', text: '感到受骗、中了圈套或有人想抓住您', dim: '偏执' },
+                        { id: 'q23', text: '无缘无故地突然感到害怕', dim: '焦虑' },
+                        { id: 'q24', text: '自己不能控制地大发脾气', dim: '敌对' },
+                        { id: 'q25', text: '怕单独出门', dim: '恐惧' },
+                        { id: 'q26', text: '经常责怪自己', dim: '抑郁' },
+                        { id: 'q27', text: '腰痛', dim: '躯体化' },
+                        { id: 'q28', text: '感到难以完成任务', dim: '强迫' },
+                        { id: 'q29', text: '感到孤独', dim: '抑郁' },
+                        { id: 'q30', text: '感到苦闷', dim: '抑郁' },
+                        { id: 'q31', text: '过分担忧', dim: '焦虑' },
+                        { id: 'q32', text: '对事物不感兴趣', dim: '抑郁' },
+                        { id: 'q33', text: '感到害怕', dim: '焦虑' },
+                        { id: 'q34', text: '您的感情容易受到伤害', dim: '人际关系' },
+                        { id: 'q35', text: '旁人能知道您的私下想法', dim: '精神病性' },
+                        { id: 'q36', text: '感到别人不理解您、不同情您', dim: '偏执' },
+                        { id: 'q37', text: '感到人们对您不友好、不喜欢您', dim: '人际关系' },
+                        { id: 'q38', text: '做事必须做得很慢以保证做得正确', dim: '强迫' },
+                        { id: 'q39', text: '心跳得很厉害', dim: '焦虑' },
+                        { id: 'q40', text: '恶心或胃部不舒服', dim: '躯体化' },
+                        { id: 'q41', text: '感到比不上他人', dim: '人际关系' },
+                        { id: 'q42', text: '肌肉酸痛', dim: '躯体化' },
+                        { id: 'q43', text: '感到有人在监视您、谈论您', dim: '偏执' },
+                        { id: 'q44', text: '难以入睡', dim: '其他' },
+                        { id: 'q45', text: '做事必须反复检查', dim: '强迫' },
+                        { id: 'q46', text: '难以做出决定', dim: '强迫' },
+                        { id: 'q47', text: '怕乘电车、公共汽车、地铁或火车', dim: '恐惧' },
+                        { id: 'q48', text: '呼吸有困难', dim: '躯体化' },
+                        { id: 'q49', text: '一阵阵发冷或发热', dim: '躯体化' },
+                        { id: 'q50', text: '因为感到害怕而避开某些东西、场合或活动', dim: '恐惧' },
+                        { id: 'q51', text: '脑子变空了', dim: '精神病性' },
+                        { id: 'q52', text: '身体发麻或刺痛', dim: '躯体化' },
+                        { id: 'q53', text: '喉咙有梗塞感', dim: '躯体化' },
+                        { id: 'q54', text: '感到前途没有希望', dim: '抑郁' },
+                        { id: 'q55', text: '不能集中注意力', dim: '强迫' },
+                        { id: 'q56', text: '感到身体的某一部分软弱无力', dim: '躯体化' },
+                        { id: 'q57', text: '感到紧张或容易紧张', dim: '焦虑' },
+                        { id: 'q58', text: '感到手或脚发重', dim: '躯体化' },
+                        { id: 'q59', text: '想到死亡的事', dim: '抑郁' },
+                        { id: 'q60', text: '吃得太多', dim: '其他' },
+                        { id: 'q61', text: '当别人看着您或谈论您时感到不自在', dim: '人际关系' },
+                        { id: 'q62', text: '有一些不属于您自己的想法', dim: '精神病性' },
+                        { id: 'q63', text: '有想打人或伤害他人的冲动', dim: '敌对' },
+                        { id: 'q64', text: '醒得太早', dim: '其他' },
+                        { id: 'q65', text: '必须反复洗手、点数目或触摸某些东西', dim: '强迫' },
+                        { id: 'q66', text: '睡得不稳不深', dim: '其他' },
+                        { id: 'q67', text: '有想摔坏或破坏东西的冲动', dim: '敌对' },
+                        { id: 'q68', text: '有一些别人没有的想法或念头', dim: '精神病性' },
+                        { id: 'q69', text: '感到对别人神经过敏', dim: '人际关系' },
+                        { id: 'q70', text: '在商店或电影院等人多的地方感到不自在', dim: '恐惧' },
+                        { id: 'q71', text: '感到任何事情都很困难', dim: '抑郁' },
+                        { id: 'q72', text: '一阵阵恐惧或惊恐', dim: '焦虑' },
+                        { id: 'q73', text: '感到在公共场合吃东西很不舒服', dim: '人际关系' },
+                        { id: 'q74', text: '经常与人争论', dim: '敌对' },
+                        { id: 'q75', text: '单独一人时神经很紧张', dim: '恐惧' },
+                        { id: 'q76', text: '别人对您的成绩没有作出恰当的评价', dim: '偏执' },
+                        { id: 'q77', text: '即使和别人在一起也感到孤单', dim: '抑郁' },
+                        { id: 'q78', text: '感到坐立不安心神不定', dim: '焦虑' },
+                        { id: 'q79', text: '感到自己没有什么价值', dim: '抑郁' },
+                        { id: 'q80', text: '感到熟悉的东西变成陌生或不像是真的', dim: '精神病性' },
+                        { id: 'q81', text: '大叫或摔东西', dim: '敌对' },
+                        { id: 'q82', text: '害怕会在公共场合晕倒', dim: '恐惧' },
+                        { id: 'q83', text: '感到别人想占您的便宜', dim: '偏执' },
+                        { id: 'q84', text: '为一些有关"性"的想法而很苦恼', dim: '其他' },
+                        { id: 'q85', text: '您认为应该因为自己的过错而受到惩罚', dim: '抑郁' },
+                        { id: 'q86', text: '感到要赶快把事情做完', dim: '焦虑' },
+                        { id: 'q87', text: '感到自己的身体有严重问题', dim: '躯体化' },
+                        { id: 'q88', text: '从未感到和其他人很亲近', dim: '人际关系' },
+                        { id: 'q89', text: '感到自己有罪', dim: '抑郁' },
+                        { id: 'q90', text: '感到自己的脑子有毛病', dim: '精神病性' },
+                    ],
+                    options: OPT_FREQ_5,
+                    dimensions: {
+                        '躯体化': [1, 4, 12, 27, 40, 42, 48, 49, 52, 53, 56, 58],
+                        '强迫': [3, 9, 10, 28, 38, 45, 46, 51, 55, 65],
+                        '人际关系': [6, 21, 34, 36, 37, 41, 61, 69, 73],
+                        '抑郁': [5, 14, 15, 20, 22, 26, 29, 30, 31, 32, 54, 71, 79],
+                        '焦虑': [2, 17, 23, 33, 39, 57, 72, 78, 80, 86],
+                        '敌对': [11, 24, 63, 67, 74, 81],
+                        '恐惧': [13, 25, 47, 50, 70, 75, 82],
+                        '偏执': [8, 18, 43, 68, 76, 83],
+                        '精神病性': [7, 16, 35, 62, 77, 84, 85, 87, 88, 90],
+                    },
+                    scoring: (answers) => {
+                        const total = Object.values(answers).reduce((s, v) => s + (parseInt(v) || 1), 0);
+                        const dimScores = {};
+                        const dims = SCALE_REGISTRY.scl90.dimensions;
+                        Object.entries(dims).forEach(([name, qNums]) => {
+                            const sum = qNums.reduce((s, n) => s + (parseInt(answers[`q${n}`]) || 1), 0);
+                            dimScores[name] = { sum, avg: (sum / qNums.length).toFixed(2),
+                                count: qNums.length };
+                        });
+                        const avgTotal = (total / 90).toFixed(2);
+                        let level = avgTotal < 2 ? '心理健康状况良好' : avgTotal < 3 ? '轻度心理困扰' : avgTotal < 4 ?
+                            '中度心理困扰' : '重度心理困扰';
+                        return { total, avgTotal, dimScores, maxScore: 450, level,
+                            suggestion: avgTotal >= 3 ? '建议进行专业心理咨询评估。' : '整体状况良好，继续保持。',
+                            interpretation: `总分${total}/450，均分${avgTotal}：${level}` };
+                    }
+                },
+            };
+
+            // ==================== 工具函数 ====================
+            const dom = {
+                get(id) { return document.getElementById(id); },
+                create(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html) e
+                        .innerHTML = html; return e; },
+                escapeHTML(t) { const d = document.createElement('div');
+                    d.textContent = t; return d.innerHTML; },
+                sanitize(s) { return s.replace(/[<>]/g, ''); },
+            };
+
+            function debounce(fn, ms) { let t; return function(...a) { clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, a), ms); }; }
+
+            // ==================== 简易Markdown渲染 ====================
+            function renderMarkdown(text) {
+                if (!text) return '';
+                let html = dom.escapeHTML(text);
+                html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+                html = html.replace(/^### (.+)$/gm, '<h4 class="font-semibold text-sm mt-3 mb-1">$1</h4>');
+                html = html.replace(/^## (.+)$/gm, '<h3 class="font-semibold text-base mt-3 mb-1">$1</h3>');
+                html = html.replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-sm">$1</li>');
+                html = html.replace(/\n/g, '<br>');
+                return html;
+            }
+
+            // ==================== localStorage 辅助 ====================
+            const storage = {
+                get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+                set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
+                remove(key) { try { localStorage.removeItem(key); } catch {} },
+            };
+
+            // ==================== API服务 ====================
+            class ApiService {
+                constructor() { this.baseURL = CONFIG.API_BASE_URL;
+                    this.sessionToken = storage.get('session_token'); }
+                async request(endpoint, opts = {}) {
+                    const headers = { 'Content-Type': 'application/json', ...opts.headers };
+                    if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                    try {
+                        const resp = await fetch(`${this.baseURL}${endpoint}`, { headers, ...opts });
+                        if (!resp.ok) {
+                            if (resp.status === 401) { this.clearSession();
+                                window.dispatchEvent(new CustomEvent('session-expired')); }
+                            throw new Error(`HTTP ${resp.status}`);
+                        }
+                        return resp.json();
+                    } catch (e) { throw e; }
+                }
+                setSession(token, user) { this.sessionToken = token;
+                    storage.set('session_token', token); if (user) storage.set('user_data', user); }
+                clearSession() { this.sessionToken = null;
+                    storage.remove('session_token');
+                    storage.remove('user_data'); }
+                getCachedUser() { return storage.get('user_data'); }
+                register(data) { return this.request('/auth/register', { method: 'POST', body: JSON.stringify(data) }); }
+                login(data) { return this.request('/auth/login', { method: 'POST', body: JSON.stringify(data) }); }
+                async logout() { if (this.sessionToken) await this.request('/auth/logout', { method: 'POST',
+                        body: JSON.stringify({ session_token: this.sessionToken }) }).catch(() => {}); this
+                        .clearSession(); }
+                getCurrentUser() { return this.request('/users/me'); }
+                getAIResponse(taskId, msg, profile) { return this.request('/ai/response', { method: 'POST',
+                        body: JSON.stringify({ taskId, userMessage: msg, userProfile: profile }) }); }
+                async getAIResponseStream(taskId, msg, profile, onChunk, onDone, onErr) {
+                    try {
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                        const resp = await fetch(`${this.baseURL}/ai/response/stream`, { method: 'POST', headers,
+                            body: JSON.stringify({ taskId, userMessage: msg, userProfile: profile }) });
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                        const reader = resp.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buf = '';
+                        while (true) { const { done, value } = await reader.read(); if (done) break;
+                            buf += decoder.decode(value, { stream: true }); const lines = buf.split('\n');
+                            buf = lines.pop(); for (const l of lines) { if (l.startsWith('data: ')) { try { const d =
+                                            JSON.parse(l.slice(6)); if (d.error) { onErr(d.error); return; } if (d
+                                            .done) { onDone(); return; } if (d.content) onChunk(d
+                                        .content); } catch {} } } }
+                    } catch (e) { onErr(e.message); }
+                }
+            }
+
+            // ==================== 应用状态 ====================
+            class AppState {
+                constructor() {
+                    this.currentUser = null;
+                    this.api = new ApiService();
+                    this.scaleResults = {}; // {scaleId: {scoreData, timestamp}}
+                    this.techPreferences = [];
+                    this.uploadedFiles = [];
+                    this.disclaimerAcked = storage.get(CONFIG.DISCLAIMER_ACK_KEY) === true;
+                }
+                async initialize() {
+                    if (this.api.sessionToken) {
+                        try {
+                            const resp = await this.api.getCurrentUser();
+                            if (resp.success) { this.currentUser = resp.data;
+                                this.api.setSession(this.api.sessionToken, resp.data); } else { this.api
+                                    .clearSession(); }
+                        } catch { this.api.clearSession(); }
+                    }
+                    if (this.currentUser) this._loadLocalData();
+                }
+                _loadLocalData() {
+                    const uname = this.currentUser?.username || 'anonymous';
+                    this.scaleResults = storage.get(`psy_scales_${uname}`) || {};
+                    this.techPreferences = storage.get(CONFIG.TECH_PREFS_KEY + uname) || [];
+                    this.uploadedFiles = storage.get(CONFIG.UPLOADED_FILES_KEY + uname) || [];
+                    this.disclaimerAcked = storage.get(CONFIG.DISCLAIMER_ACK_KEY) === true;
+                }
+                _saveLocalData() {
+                    const uname = this.currentUser?.username || 'anonymous';
+                    storage.set(`psy_scales_${uname}`, this.scaleResults);
+                    storage.set(CONFIG.TECH_PREFS_KEY + uname, this.techPreferences);
+                    storage.set(CONFIG.UPLOADED_FILES_KEY + uname, this.uploadedFiles);
+                    storage.set(CONFIG.DISCLAIMER_ACK_KEY, this.disclaimerAcked);
+                }
+                isLoggedIn() { return !!this.currentUser; }
+                setScaleResult(scaleId, result) { this.scaleResults[scaleId] = { data: result, timestamp: Date.now() };
+                    this._saveLocalData(); }
+                getScaleResult(scaleId) { return this.scaleResults[scaleId] || null; }
+                getAllScaleResults() { return this.scaleResults; }
+                setTechPreferences(prefs) { this.techPreferences = prefs;
+                    this._saveLocalData(); }
+                addUploadedFile(fileInfo) { this.uploadedFiles.push(fileInfo);
+                    this._saveLocalData(); }
+                buildUserProfile() {
+                    const profile = { basic: {}, scales: {}, techPrefs: [], files: [] };
+                    if (this.currentUser) {
+                        profile.basic = { name: this.currentUser.name || '', age: this.currentUser.age || '',
+                            gender: this.currentUser.gender || '' };
+                    }
+                    profile.scales = this.scaleResults;
+                    profile.techPrefs = this.techPreferences;
+                    profile.files = this.uploadedFiles.map(f => ({ name: f.name, type: f.type }));
+                    return profile;
+                }
+                getProfileSummary() {
+                    const profile = this.buildUserProfile();
+                    let summary = '';
+                    if (profile.basic.name) summary += `用户${profile.basic.name}，`;
+                    if (profile.basic.age) summary += `${profile.basic.age}岁，`;
+                    const completedScales = Object.keys(profile.scales);
+                    if (completedScales.length > 0) {
+                        summary += `已完成${completedScales.length}项心理测量：`;
+                        completedScales.forEach(sid => {
+                            const cfg = SCALE_REGISTRY[sid];
+                            const res = profile.scales[sid];
+                            if (cfg && res?.data) summary +=
+                                `${cfg.shortName}(${res.data.interpretation})；`;
+                        });
+                    }
+                    if (profile.techPrefs.length > 0) summary +=
+                        `偏好咨询技术：${profile.techPrefs.map(t => t.name).join('、')}。`;
+                    return summary || '尚未完成心理测量。';
+                }
+            }
+
+            // ==================== UI管理器 ====================
+            class UIManager {
+                constructor(state) {
+                    this.state = state;
+                    this.api = state.api;
+                    this.isSending = false;
+                    this.currentScaleId = null;
+                    this.currentScalePage = 0;
+                    this.currentScaleAnswers = {};
+                    this.els = {};
+                    this._cacheElements();
+                    this._bindEvents();
+                }
+
+                _cacheElements() {
+                    const ids = ['auth-modal', 'login-btn', 'logout-btn', 'guest-login-btn', 'close-auth',
+                        'login-form', 'register-form', 'switch-to-register', 'switch-to-login',
+                        'submit-login', 'submit-register', 'login-username', 'login-password',
+                        'reg-username', 'reg-password', 'reg-name', 'reg-age', 'reg-gender',
+                        'guest-content', 'app-content', 'sidebar', 'user-info', 'current-user-name',
+                        'user-badge', 'scale-menu-list', 'tech-tags-container', 'save-tech-prefs',
+                        'upload-zone', 'file-input', 'uploaded-files-list', 'show-disclaimer-btn',
+                        'disclaimer-modal', 'close-disclaimer', 'acknowledge-disclaimer',
+                        'scale-modal', 'scale-modal-title', 'scale-modal-body', 'close-scale-modal',
+                        'scale-progress-info', 'scale-prev-btn', 'scale-next-btn', 'scale-submit-btn',
+                        'chat-container', 'message-input', 'send-btn', 'char-count', 'chat-status',
+                        'profile-content', 'notification-toast', 'notification-text', 'notification-icon',
+                        'sidebar-toggle',
+                    ];
+                    ids.forEach(id => { const el = dom.get(id); if (el) this.els[id] = el; });
+                }
+
+                _bindEvents() {
+                    window.addEventListener('session-expired', () => { this.showNotification('⚠️', '会话已过期，请重新登录');
+                        this.updateUIAfterLogout(); });
+                    this._on('loginBtn', 'click', () => this.showAuthModal());
+                    this._on('guestLoginBtn', 'click', () => this.showAuthModal());
+                    this._on('logoutBtn', 'click', () => this.logout());
+                    this._on('closeAuth', 'click', () => this.hideAuthModal());
+                    this._on('switchToRegister', 'click', () => this._toggleAuthForms(false));
+                    this._on('switchToLogin', 'click', () => this._toggleAuthForms(true));
+                    this._on('submitLogin', 'click', () => this.login());
+                    this._on('submitRegister', 'click', () => this.register());
+                    this._on('closeDisclaimer', 'click', () => this._hideModal('disclaimer-modal'));
+                    this._on('acknowledgeDisclaimer', 'click', () => this._acknowledgeDisclaimer());
+                    this._on('showDisclaimerBtn', 'click', () => this._showModal('disclaimer-modal'));
+                    this._on('closeScaleModal', 'click', () => this._hideModal('scale-modal'));
+                    this._on('scalePrevBtn', 'click', () => this._navigateScale(-1));
+                    this._on('scaleNextBtn', 'click', () => this._navigateScale(1));
+                    this._on('scaleSubmitBtn', 'click', () => this._submitScale());
+                    this._on('sendBtn', 'click', () => this.sendMessage());
+                    this._on('messageInput', 'input', (e) => {
+                        const len = e.target.value.length;
+                        if (this.els.charCount) this.els.charCount.textContent =
+                            `${len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
+                        if (this.els.sendBtn) this.els.sendBtn.disabled = !(len > 0 && len <= CONFIG
+                            .MAX_MESSAGE_LENGTH);
+                    });
+                    this._on('messageInput', 'keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e
+                            .preventDefault();
+                            this.sendMessage(); } });
+                    if (this.els.uploadZone) {
+                        this.els.uploadZone.addEventListener('click', () => this.els.fileInput?.click());
+                        this.els.uploadZone.addEventListener('dragover', (e) => { e.preventDefault();
+                            this.els.uploadZone.style.borderColor = '#5B8C5A'; });
+                        this.els.uploadZone.addEventListener('dragleave', () => { this.els.uploadZone.style
+                                .borderColor = '#D0C8BC'; });
+                        this.els.uploadZone.addEventListener('drop', (e) => { e.preventDefault();
+                            this.els.uploadZone.style.borderColor = '#D0C8BC'; if (e.dataTransfer.files
+                                .length) this._handleFileUpload(e.dataTransfer.files[0]); });
+                    }
+                    if (this.els.fileInput) {
+                        this.els.fileInput.addEventListener('change', (e) => { if (e.target.files.length) this
+                                ._handleFileUpload(e.target.files[0]); });
+                    }
+                    if (this.els.sidebarToggle) {
+                        this.els.sidebarToggle.addEventListener('click', () => { if (this.els.sidebar) this.els
+                                .sidebar.classList.toggle('hidden'); });
+                    }
+                    if (this.els.saveTechPrefs) {
+                        this.els.saveTechPrefs.addEventListener('click', () => this._saveTechPreferences());
+                    }
+                }
+
+                _on(elKey, event, handler) { const el = this.els[elKey]; if (el) el.addEventListener(event,
+                    handler); }
+                _showModal(key) { const el = this.els[key]; if (el) el.classList.remove('hidden'); }
+                _hideModal(key) { const el = this.els[key]; if (el) el.classList.add('hidden'); }
+
+                // ============ 认证 ============
+                showAuthModal() { this._showModal('auth-modal');
+                    this._toggleAuthForms(true); }
+                hideAuthModal() { this._hideModal('auth-modal'); }
+                _toggleAuthForms(showLogin) {
+                    if (this.els.loginForm) this.els.loginForm.classList.toggle('hidden', !showLogin);
+                    if (this.els.registerForm) this.els.registerForm.classList.toggle('hidden', showLogin);
+                }
+                async login() {
+                    const u = this.els.loginUsername?.value?.trim();
+                    const p = this.els.loginPassword?.value;
+                    if (!u || !p) { this.showNotification('⚠️', '请填写用户名和密码'); return; }
+                    try {
+                        const resp = await this.api.login({ username: u, password: p });
+                        if (resp.success) { this.api.setSession(resp.data.session_token, resp.data.user);
+                            this.state.currentUser = resp.data.user;
+                            this.state._loadLocalData();
+                            this.hideAuthModal(); await this.updateUIAfterLogin();
+                            this.showNotification('✅', '登录成功'); } else this.showNotification('⚠️', resp.message ||
+                                '登录失败');
+                    } catch { this.showNotification('⚠️', '登录失败，请检查网络'); }
+                }
+                async register() {
+                    const data = { username: this.els.regUsername?.value?.trim(), password: this.els.regPassword
+                            ?.value, name: this.els.regName?.value?.trim(), age: parseInt(this.els.regAge
+                            ?.value) || null,
+                        gender: this.els.regGender?.value || null };
+                    if (!data.username || !data.password) { this.showNotification('⚠️', '请填写用户名和密码'); return; }
+                    try {
+                        const resp = await this.api.register(data);
+                        if (resp.success) { this.api.setSession(resp.data.session_token, resp.data.user);
+                            this.state.currentUser = resp.data.user;
+                            this.state._loadLocalData();
+                            this.hideAuthModal(); await this.updateUIAfterLogin();
+                            this.showNotification('✅', '注册成功'); } else this.showNotification('⚠️', resp.message ||
+                                '注册失败');
+                    } catch { this.showNotification('⚠️', '注册失败，请检查网络'); }
+                }
+                async logout() {
+                    await this.api.logout();
+                    this.state.currentUser = null;
+                    this.updateUIAfterLogout();
+                    this.showNotification('👋', '已退出登录');
+                }
+                _acknowledgeDisclaimer() { this.state.disclaimerAcked = true;
+                    storage.set(CONFIG.DISCLAIMER_ACK_KEY, true);
+                    this._hideModal('disclaimer-modal');
+                    this.showNotification('✅', '已确认免责声明'); }
+
+                // ============ UI更新 ============
+                async updateUIAfterLogin() {
+                    if (this.els.guestContent) this.els.guestContent.classList.add('hidden');
+                    if (this.els.appContent) this.els.appContent.classList.remove('hidden');
+                    if (this.els.sidebar) this.els.sidebar.classList.remove('hidden');
+                    if (this.els.loginBtn) this.els.loginBtn.classList.add('hidden');
+                    if (this.els.logoutBtn) this.els.logoutBtn.classList.remove('hidden');
+                    if (this.els.userInfo) this.els.userInfo.classList.remove('hidden');
+                    if (this.els.currentUserName) this.els.currentUserName.textContent = this.state.currentUser
+                        ?.name || this.state.currentUser?.username || '用户';
+                    if (this.els.userBadge) this.els.userBadge.textContent = '已登录';
+                    this._renderScaleMenu();
+                    this._renderTechTags();
+                    this._renderUploadedFiles();
+                    this._updateProfilePanel();
+                    if (this.els.saveTechPrefs) this.els.saveTechPrefs.classList.remove('hidden');
+                }
+                updateUIAfterLogout() {
+                    if (this.els.guestContent) this.els.guestContent.classList.remove('hidden');
+                    if (this.els.appContent) this.els.appContent.classList.add('hidden');
+                    if (this.els.loginBtn) this.els.loginBtn.classList.remove('hidden');
+                    if (this.els.logoutBtn) this.els.logoutBtn.classList.add('hidden');
+                    if (this.els.userInfo) this.els.userInfo.classList.add('hidden');
+                }
+
+                // ============ 量表菜单 ============
+                _renderScaleMenu() {
+                    const container = this.els.scaleMenuList;
+                    if (!container) return;
+                    container.innerHTML = '';
+                    Object.values(SCALE_REGISTRY).forEach(cfg => {
+                        const result = this.state.getScaleResult(cfg.id);
+                        const completed = !!result;
+                        const inProgress = !!storage.get(CONFIG.SCALE_PROGRESS_PREFIX + cfg.id + '_' + (this
+                            .state.currentUser?.username || ''));
+                        let badgeHTML = '';
+                        if (completed) {
+                            const scoreInfo = result.data?.interpretation || '';
+                            badgeHTML =
+                                `<span class="scale-badge done">✓ ${scoreInfo.split('：')[0]||'已完成'}</span>`;
+                        } else if (inProgress) {
+                            badgeHTML = '<span class="scale-badge in-progress">进行中</span>';
+                        } else {
+                            badgeHTML = '<span class="scale-badge pending">未测量</span>';
+                        }
+                        const item = dom.create('div',
+                            `scale-menu-item p-3 flex justify-between items-center gap-2 ${completed?'completed':''}`,
+                            `<div><span class="text-sm font-medium text-[#2D4059]">${cfg.shortName}</span><p class="text-xs text-[#718096] mt-0.5">${cfg.name.replace(cfg.shortName+' ','')}</p></div>${badgeHTML}`
+                            );
+                        item.addEventListener('click', () => this._openScale(cfg.id));
+                        container.appendChild(item);
+                    });
+                }
+
+                _openScale(scaleId) {
+                    const cfg = SCALE_REGISTRY[scaleId];
+                    if (!cfg) return;
+                    this.currentScaleId = scaleId;
+                    this.currentScalePage = 0;
+                    // 恢复进度
+                    const progKey = CONFIG.SCALE_PROGRESS_PREFIX + scaleId + '_' + (this.state.currentUser
+                        ?.username || '');
+                    const saved = storage.get(progKey);
+                    this.currentScaleAnswers = saved?.answers || {};
+                    if (saved?.page) this.currentScalePage = saved.page;
+                    this._showModal('scale-modal');
+                    if (this.els.scaleModalTitle) this.els.scaleModalTitle.textContent = '📋 ' + cfg.name;
+                    this._renderScalePage();
+                }
+
+                _getTotalScalePages() {
+                    const cfg = SCALE_REGISTRY[this.currentScaleId];
+                    if (!cfg) return 1;
+                    const totalQ = cfg.questions.length + (cfg.extraQuestions?.length || 0);
+                    const perPage = cfg.id === 'scl90' ? 15 : 10;
+                    return Math.ceil(totalQ / perPage);
+                }
+
+                _renderScalePage() {
+                    const cfg = SCALE_REGISTRY[this.currentScaleId];
+                    if (!cfg) return;
+                    const perPage = cfg.id === 'scl90' ? 15 : 10;
+                    const allQuestions = [...cfg.questions];
+                    if (cfg.extraQuestions) allQuestions.push(...cfg.extraQuestions);
+                    const totalPages = Math.ceil(allQuestions.length / perPage);
+                    const page = Math.min(this.currentScalePage, totalPages - 1);
+                    const start = page * perPage;
+                    const pageQuestions = allQuestions.slice(start, start + perPage);
+
+                    let html = '';
+                    pageQuestions.forEach((q, idx) => {
+                        const qNum = start + idx + 1;
+                        const savedVal = this.currentScaleAnswers[q.id];
+                        html +=
+                            `<div class="mb-5 p-4 bg-[#FAFAF8] rounded-xl border border-[#F0EBE3]"><p class="text-sm font-medium text-[#2D4059] mb-3"><span class="text-[#5B8C5A] font-bold">${qNum}.</span> ${dom.escapeHTML(q.text)}</p><div class="space-y-2">`;
+                        const options = q.options || cfg.options;
+                        options.forEach(opt => {
+                            const isSelected = savedVal !== undefined && parseInt(savedVal) === opt
+                                .value;
+                            html +=
+                                `<label class="scale-option ${isSelected?'selected':''}"><input type="radio" name="sq_${q.id}" value="${opt.value}" ${isSelected?'checked':''} onchange="document.dispatchEvent(new CustomEvent('scale-answer',{detail:{qid:'${q.id}',val:${opt.value}}}))"><span>${opt.label}</span></label>`;
+                        });
+                        html += '</div></div>';
+                    });
+
+                    if (this.els.scaleModalBody) this.els.scaleModalBody.innerHTML = html;
+                    if (this.els.scaleProgressInfo) this.els.scaleProgressInfo.textContent =
+                        `第 ${page+1}/${totalPages} 页 · 共 ${allQuestions.length} 题`;
+                    if (this.els.scalePrevBtn) this.els.scalePrevBtn.classList.toggle('hidden', page === 0);
+                    if (this.els.scaleNextBtn) this.els.scaleNextBtn.classList.toggle('hidden', page >= totalPages -
+                        1);
+                    if (this.els.scaleSubmitBtn) this.els.scaleSubmitBtn.classList.toggle('hidden', page < totalPages -
+                        1);
+
+                    // 监听答案变化
+                    const handler = (e) => {
+                        if (e.detail?.qid) {
+                            this.currentScaleAnswers[e.detail.qid] = e.detail.val;
+                            this._saveScaleProgress();
+                        }
+                    };
+                    document.removeEventListener('scale-answer', handler);
+                    document.addEventListener('scale-answer', handler);
+                }
+
+                _navigateScale(dir) {
+                    const totalPages = this._getTotalScalePages();
+                    this.currentScalePage = Math.max(0, Math.min(totalPages - 1, this.currentScalePage + dir));
+                    this._saveScaleProgress();
+                    this._renderScalePage();
+                }
+
+                _saveScaleProgress() {
+                    const uname = this.state.currentUser?.username || '';
+                    const key = CONFIG.SCALE_PROGRESS_PREFIX + this.currentScaleId + '_' + uname;
+                    storage.set(key, { answers: this.currentScaleAnswers, page: this.currentScalePage,
+                        timestamp: Date.now() });
+                }
+
+                _submitScale() {
+                    const cfg = SCALE_REGISTRY[this.currentScaleId];
+                    if (!cfg) return;
+                    const allQuestions = [...cfg.questions, ...(cfg.extraQuestions || [])];
+                    const unanswered = allQuestions.filter(q => this.currentScaleAnswers[q.id] === undefined);
+                    if (unanswered.length > 0) {
+                        this.showNotification('⚠️', `还有 ${unanswered.length} 题未回答，请完成所有题目后再提交`);
+                        return;
+                    }
+                    const result = cfg.scoring(this.currentScaleAnswers);
+                    this.state.setScaleResult(this.currentScaleId, result);
+                    // 清除进度
+                    const uname = this.state.currentUser?.username || '';
+                    storage.remove(CONFIG.SCALE_PROGRESS_PREFIX + this.currentScaleId + '_' + uname);
+                    this.currentScaleAnswers = {};
+                    this.currentScalePage = 0;
+                    this._hideModal('scale-modal');
+                    this._renderScaleMenu();
+                    this._updateProfilePanel();
+                    this.showNotification('✅',
+                        `${cfg.shortName} 测量完成：${result.interpretation}`);
+                }
+
+                // ============ 咨询技术 ============
+                _renderTechTags() {
+                    const container = this.els.techTagsContainer;
+                    if (!container) return;
+                    container.innerHTML = '';
+                    COUNSELING_TECHNIQUES.forEach(tech => {
+                        const selected = this.state.techPreferences.some(t => t.id === tech.id);
+                        const tag = dom.create('span',
+                            `tech-tag ${selected?'selected':''}`,
+                            tech.name.split('(')[0]);
+                        tag.title = tech.desc;
+                        tag.addEventListener('click', () => {
+                            tag.classList.toggle('selected');
+                            this._updateTechPreferencesFromUI();
+                        });
+                        container.appendChild(tag);
+                    });
+                }
+
+                _updateTechPreferencesFromUI() {
+                    const tags = this.els.techTagsContainer?.querySelectorAll('.tech-tag.selected');
+                    if (!tags) return;
+                    const selected = Array.from(tags).map((t, i) => {
+                        const tech = COUNSELING_TECHNIQUES[i];
+                        return tech || { id: 'custom', name: t.textContent.trim() };
+                    }).filter(t => t.id !== 'custom' || t.name);
+                    this.state.setTechPreferences(selected);
+                    this._updateProfilePanel();
+                }
+
+                _saveTechPreferences() {
+                    this._updateTechPreferencesFromUI();
+                    this.showNotification('✅', '咨询技术偏好已保存');
+                }
+
+                // ============ 病历上传 ============
+                _handleFileUpload(file) {
+                    if (file.size > 10 * 1024 * 1024) { this.showNotification('⚠️', '文件大小不能超过10MB'); return; }
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const fileInfo = { name: file.name, type: file.type, size: file.size,
+                            dataUrl: reader.result, timestamp: Date.now() };
+                        this.state.addUploadedFile(fileInfo);
+                        this._renderUploadedFiles();
+                        this._updateProfilePanel();
+                        this.showNotification('✅', `已上传：${file.name}`);
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                _renderUploadedFiles() {
+                    const container = this.els.uploadedFilesList;
+                    if (!container) return;
+                    container.innerHTML = '';
+                    this.state.uploadedFiles.forEach((f, i) => {
+                        const item = dom.create('div',
+                            'flex justify-between items-center p-2 bg-[#FAFAF8] rounded-lg text-xs',
+                            `<span class="truncate flex-1">📄 ${dom.escapeHTML(f.name)}</span><button class="text-[#C0392B] hover:underline ml-2 flex-shrink-0" data-idx="${i}">删除</button>`
+                            );
+                        item.querySelector('button')?.addEventListener('click', () => {
+                            this.state.uploadedFiles.splice(i, 1);
+                            this.state._saveLocalData();
+                            this._renderUploadedFiles();
+                            this._updateProfilePanel();
+                        });
+                        container.appendChild(item);
+                    });
+                }
+
+                // ============ 用户画像面板 ============
+                _updateProfilePanel() {
+                    const container = this.els.profileContent;
+                    if (!container) return;
+                    const profile = this.state.buildUserProfile();
+                    let html = '';
+                    // 基本信息
+                    html +=
+                        '<div class="profile-section"><h4>👤 基本信息</h4><div class="flex flex-wrap gap-1">';
+                    if (profile.basic.name) html +=
+                        `<span class="profile-tag">姓名：${dom.escapeHTML(profile.basic.name)}</span>`;
+                    if (profile.basic.age) html += `<span class="profile-tag">年龄：${profile.basic.age}</span>`;
+                    if (profile.basic.gender) html +=
+                        `<span class="profile-tag">性别：${profile.basic.gender==='male'?'男':profile.basic.gender==='female'?'女':'其他'}</span>`;
+                    html += '</div></div>';
+                    // 量表结果
+                    html += '<div class="profile-section"><h4>📋 测量结果</h4>';
+                    const scaleKeys = Object.keys(profile.scales);
+                    if (scaleKeys.length === 0) {
+                        html += '<p class="text-xs text-[#B0A89C]">尚未完成任何量表</p>';
+                    } else {
+                        scaleKeys.forEach(sid => {
+                            const cfg = SCALE_REGISTRY[sid];
+                            const res = profile.scales[sid];
+                            if (cfg && res?.data) {
+                                html +=
+                                    `<div class="mb-2 p-2 bg-[#FAFAF8] rounded-lg"><span class="text-xs font-medium text-[#2D4059]">${cfg.shortName}</span><p class="text-xs text-[#718096]">${res.data.interpretation}</p></div>`;
+                            }
+                        });
+                    }
+                    html += '</div>';
+                    // 咨询技术
+                    html += '<div class="profile-section"><h4>🎯 咨询偏好</h4>';
+                    if (profile.techPrefs.length === 0) {
+                        html += '<p class="text-xs text-[#B0A89C]">未选择咨询技术</p>';
+                    } else {
+                        html += '<div class="flex flex-wrap gap-1">';
+                        profile.techPrefs.forEach(t => { html +=
+                                `<span class="profile-tag">${dom.escapeHTML(t.name||t.id)}</span>`; });
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                    // 病历文件
+                    html += '<div class="profile-section"><h4>📁 病历资料</h4>';
+                    if (profile.files.length === 0) {
+                        html += '<p class="text-xs text-[#B0A89C]">未上传病历</p>';
+                    } else {
+                        profile.files.forEach(f => { html +=
+                                `<p class="text-xs text-[#718096]">📄 ${dom.escapeHTML(f.name)}</p>`; });
+                    }
+                    html += '</div>';
+                    container.innerHTML = html;
+                }
+
+                // ============ 对话 ============
+                async sendMessage() {
+                    if (this.isSending) return;
+                    const msgEl = this.els.messageInput;
+                    if (!msgEl) return;
+                    const msg = msgEl.value.trim();
+                    if (!msg || msg.length > CONFIG.MAX_MESSAGE_LENGTH) return;
+                    if (!this.state.disclaimerAcked) { this._showModal('disclaimer-modal');
+                        this.showNotification('⚠️', '请先阅读并确认免责声明'); return; }
+                    this.isSending = true;
+                    this._addMessage(msg, true);
+                    msgEl.value = '';
+                    if (this.els.charCount) this.els.charCount.textContent = `0/${CONFIG.MAX_MESSAGE_LENGTH}`;
+                    if (this.els.sendBtn) this.els.sendBtn.disabled = true;
+                    if (this.els.chatStatus) this.els.chatStatus.textContent = '正在输入...';
+                    this._showTyping();
+                    const profile = this.state.buildUserProfile();
+                    const profileSummary = this.state.getProfileSummary();
+                    let aiDiv = null,
+                        aiContent = null,
+                        fullContent = '';
+                    try {
+                        await this.api.getAIResponseStream('counseling', msg, { profile, profileSummary },
+                            (chunk) => {
+                                if (!aiDiv) { this._hideTyping(); const r = this._createStreamingDiv();
+                                    aiDiv = r.div;
+                                    aiContent = r.content; }
+                                fullContent += chunk;
+                                if (aiContent) aiContent.innerHTML = renderMarkdown(fullContent);
+                                if (this.els.chatContainer) this.els.chatContainer.scrollTop = this.els
+                                    .chatContainer.scrollHeight;
+                            },
+                            () => { if (this.els.chatStatus) this.els.chatStatus.textContent =
+                                    '在线 · 等待对话'; },
+                            (err) => { this._hideTyping(); this._addMessage(err ||
+                                    '抱歉，我暂时无法回复，请稍后再试。', false); if (this.els.chatStatus) this.els
+                                    .chatStatus.textContent = '在线 · 等待对话'; }
+                        );
+                    } catch { this._hideTyping();
+                        this._addMessage('网络连接失败，请检查网络后重试。', false); if (this.els.chatStatus) this.els.chatStatus
+                            .textContent = '在线 · 等待对话'; } finally { this.isSending = false; if (this.els.sendBtn) this
+                            .els.sendBtn.disabled = true; }
+                }
+
+                _addMessage(content, isUser) {
+                    const container = this.els.chatContainer;
+                    if (!container) return;
+                    const div = dom.create('div',
+                        `${isUser?'chat-bubble-user':'chat-bubble-ai'} animate-fade-in`);
+                    const rendered = isUser ? dom.escapeHTML(content).replace(/\n/g, '<br>') : renderMarkdown(
+                        content);
+                    div.innerHTML =
+                        `<div class="flex items-start gap-3"><span class="flex-shrink-0 text-lg">${isUser?'👤':'🧠'}</span><div class="min-w-0"><div class="text-xs font-medium mb-1 text-[#718096]">${isUser?'您':'AI陪伴助手'}</div><div class="text-sm">${rendered}</div></div></div>`;
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                }
+                _showTyping() {
+                    const container = this.els.chatContainer;
+                    if (!container) return;
+                    const el = dom.create('div', 'chat-bubble-ai', '<span class="text-sm text-[#B0A89C]">正在思考...</span>');
+                    el.id = 'typing-indicator';
+                    container.appendChild(el);
+                    container.scrollTop = container.scrollHeight;
+                }
+                _hideTyping() { const el = dom.get('typing-indicator'); if (el) el.remove(); }
+                _createStreamingDiv() {
+                    const container = this.els.chatContainer;
+                    if (!container) return { div: null, content: null };
+                    const div = dom.create('div', 'chat-bubble-ai animate-fade-in');
+                    div.innerHTML =
+                        '<div class="flex items-start gap-3"><span class="flex-shrink-0 text-lg">🧠</span><div class="min-w-0"><div class="text-xs font-medium mb-1 text-[#718096]">AI陪伴助手</div><div class="text-sm streaming-content"></div></div></div>';
+                    container.appendChild(div);
+                    container.scrollTop = container.scrollHeight;
+                    return { div, content: div.querySelector('.streaming-content') };
+                }
+
+                // ============ 通知 ============
+                showNotification(icon, msg) {
+                    const toast = this.els.notificationToast;
+                    const text = this.els.notificationText;
+                    const iconEl = this.els.notificationIcon;
+                    if (!toast || !text) return;
+                    if (iconEl) iconEl.textContent = icon;
+                    text.textContent = msg;
+                    toast.classList.remove('translate-y-24', 'opacity-0');
+                    toast.classList.add('translate-y-0', 'opacity-100');
+                    clearTimeout(this._notifTimer);
+                    this._notifTimer = setTimeout(() => { toast.classList.add('translate-y-24', 'opacity-0');
+                        toast.classList.remove('translate-y-0', 'opacity-100'); }, CONFIG.NOTIFICATION_DURATION);
+                }
+            }
+
+            // ==================== 应用控制器 ====================
+            class AppController {
+                constructor() {
+                    this.state = new AppState();
+                    this.ui = new UIManager(this.state);
+                }
+                async initialize() {
+                    await this.state.initialize();
+                    if (this.state.isLoggedIn()) {
+                        if (!this.state.disclaimerAcked) {
+                            this.ui._showModal('disclaimer-modal');
+                        }
+                        await this.ui.updateUIAfterLogin();
+                    } else {
+                        this.ui.updateUIAfterLogout();
+                    }
+                }
+            }
+
+            // ==================== 启动 ====================
+            document.addEventListener('DOMContentLoaded', async () => {
+                const app = new AppController();
+                await app.initialize();
+                window.app = app;
+            });
+        })();
+    </script>
+</body>
+</html>
