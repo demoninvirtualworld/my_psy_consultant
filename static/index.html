@@ -56,7 +56,6 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* 聊天气泡 */
         .chat-bubble-user {
             background: #E8F5E9;
             color: #1B4332;
@@ -94,7 +93,6 @@
             }
         }
 
-        /* 量表菜单项 */
         .scale-menu-item {
             transition: all 0.2s ease;
             border-left: 3px solid transparent;
@@ -135,13 +133,11 @@
             color: #1565C0;
         }
 
-        /* 模态框 */
         .modal-overlay {
             background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(2px);
         }
 
-        /* 按钮 */
         .btn-primary {
             background: var(--primary);
             color: #fff;
@@ -173,7 +169,6 @@
             background: #F0F7F0;
         }
 
-        /* 滚动条 */
         ::-webkit-scrollbar {
             width: 5px;
         }
@@ -188,7 +183,6 @@
             background: #B0A89C;
         }
 
-        /* 量表选项 */
         .scale-option {
             display: flex;
             align-items: center;
@@ -215,7 +209,6 @@
             height: 16px;
         }
 
-        /* 上传区域 */
         .upload-zone {
             border: 2px dashed #D0C8BC;
             border-radius: var(--radius-md);
@@ -230,7 +223,6 @@
             background: #F5F9F5;
         }
 
-        /* 标签 */
         .tech-tag {
             display: inline-block;
             padding: 6px 14px;
@@ -254,7 +246,6 @@
             background: #F5F9F5;
         }
 
-        /* 画像面板 */
         .profile-section {
             background: #fff;
             border-radius: var(--radius-md);
@@ -529,7 +520,6 @@
             ];
 
             // ==================== 量表数据定义 ====================
-            // 通用选项
             const OPT_FREQ_4 = [
                 { value: 0, label: '完全不会(0)' }, { value: 1, label: '几天(1)' },
                 { value: 2, label: '一半以上天数(2)' }, { value: 3, label: '几乎每天(3)' }
@@ -643,7 +633,6 @@
                     options: OPT_FREQ_4_SDS,
                     scoring: (answers) => {
                         let rawTotal = 0;
-                        const qIds = Object.keys(answers);
                         SCALE_REGISTRY.sds.questions.forEach(q => {
                             const val = parseInt(answers[q.id]) || 1;
                             rawTotal += q.reverse ? (5 - val) : val;
@@ -917,6 +906,11 @@
             function debounce(fn, ms) { let t; return function(...a) { clearTimeout(t);
                     t = setTimeout(() => fn.apply(this, a), ms); }; }
 
+            // 将连字符ID转换为驼峰键名的工具函数
+            function toCamelCase(str) {
+                return str.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+            }
+
             // ==================== 简易Markdown渲染 ====================
             function renderMarkdown(text) {
                 if (!text) return '';
@@ -993,7 +987,7 @@
                 constructor() {
                     this.currentUser = null;
                     this.api = new ApiService();
-                    this.scaleResults = {}; // {scaleId: {scoreData, timestamp}}
+                    this.scaleResults = {};
                     this.techPreferences = [];
                     this.uploadedFiles = [];
                     this.disclaimerAcked = storage.get(CONFIG.DISCLAIMER_ACK_KEY) === true;
@@ -1079,7 +1073,9 @@
                 }
 
                 _cacheElements() {
-                    const ids = ['auth-modal', 'login-btn', 'logout-btn', 'guest-login-btn', 'close-auth',
+                    // 所有需要用到的元素ID列表（连字符形式的HTML id属性值）
+                    const ids = [
+                        'auth-modal', 'login-btn', 'logout-btn', 'guest-login-btn', 'close-auth',
                         'login-form', 'register-form', 'switch-to-register', 'switch-to-login',
                         'submit-login', 'submit-register', 'login-username', 'login-password',
                         'reg-username', 'reg-password', 'reg-name', 'reg-age', 'reg-gender',
@@ -1093,63 +1089,102 @@
                         'profile-content', 'notification-toast', 'notification-text', 'notification-icon',
                         'sidebar-toggle',
                     ];
-                    ids.forEach(id => { const el = dom.get(id); if (el) this.els[id] = el; });
+                    ids.forEach(id => {
+                        const el = dom.get(id);
+                        if (el) {
+                            // 以原始连字符ID存储
+                            this.els[id] = el;
+                            // 同时存储驼峰形式的键名，确保所有引用方式都能获取到元素
+                            const camelKey = toCamelCase(id);
+                            if (camelKey !== id) {
+                                this.els[camelKey] = el;
+                            }
+                        }
+                    });
                 }
 
                 _bindEvents() {
+                    // 会话过期
                     window.addEventListener('session-expired', () => { this.showNotification('⚠️', '会话已过期，请重新登录');
                         this.updateUIAfterLogout(); });
-                    this._on('loginBtn', 'click', () => this.showAuthModal());
-                    this._on('guestLoginBtn', 'click', () => this.showAuthModal());
-                    this._on('logoutBtn', 'click', () => this.logout());
-                    this._on('closeAuth', 'click', () => this.hideAuthModal());
-                    this._on('switchToRegister', 'click', () => this._toggleAuthForms(false));
-                    this._on('switchToLogin', 'click', () => this._toggleAuthForms(true));
-                    this._on('submitLogin', 'click', () => this.login());
-                    this._on('submitRegister', 'click', () => this.register());
-                    this._on('closeDisclaimer', 'click', () => this._hideModal('disclaimer-modal'));
-                    this._on('acknowledgeDisclaimer', 'click', () => this._acknowledgeDisclaimer());
-                    this._on('showDisclaimerBtn', 'click', () => this._showModal('disclaimer-modal'));
-                    this._on('closeScaleModal', 'click', () => this._hideModal('scale-modal'));
-                    this._on('scalePrevBtn', 'click', () => this._navigateScale(-1));
-                    this._on('scaleNextBtn', 'click', () => this._navigateScale(1));
-                    this._on('scaleSubmitBtn', 'click', () => this._submitScale());
-                    this._on('sendBtn', 'click', () => this.sendMessage());
-                    this._on('messageInput', 'input', (e) => {
-                        const len = e.target.value.length;
-                        if (this.els.charCount) this.els.charCount.textContent =
-                            `${len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
-                        if (this.els.sendBtn) this.els.sendBtn.disabled = !(len > 0 && len <= CONFIG
-                            .MAX_MESSAGE_LENGTH);
-                    });
-                    this._on('messageInput', 'keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e
-                            .preventDefault();
-                            this.sendMessage(); } });
-                    if (this.els.uploadZone) {
-                        this.els.uploadZone.addEventListener('click', () => this.els.fileInput?.click());
-                        this.els.uploadZone.addEventListener('dragover', (e) => { e.preventDefault();
-                            this.els.uploadZone.style.borderColor = '#5B8C5A'; });
-                        this.els.uploadZone.addEventListener('dragleave', () => { this.els.uploadZone.style
-                                .borderColor = '#D0C8BC'; });
-                        this.els.uploadZone.addEventListener('drop', (e) => { e.preventDefault();
-                            this.els.uploadZone.style.borderColor = '#D0C8BC'; if (e.dataTransfer.files
-                                .length) this._handleFileUpload(e.dataTransfer.files[0]); });
+
+                    // 所有事件绑定使用连字符形式的键名（与HTML id一致）
+                    this._on('login-btn', 'click', () => this.showAuthModal());
+                    this._on('guest-login-btn', 'click', () => this.showAuthModal());
+                    this._on('logout-btn', 'click', () => this.logout());
+                    this._on('close-auth', 'click', () => this.hideAuthModal());
+                    this._on('switch-to-register', 'click', () => this._toggleAuthForms(false));
+                    this._on('switch-to-login', 'click', () => this._toggleAuthForms(true));
+                    this._on('submit-login', 'click', () => this.login());
+                    this._on('submit-register', 'click', () => this.register());
+                    this._on('close-disclaimer', 'click', () => this._hideModal('disclaimer-modal'));
+                    this._on('acknowledge-disclaimer', 'click', () => this._acknowledgeDisclaimer());
+                    this._on('show-disclaimer-btn', 'click', () => this._showModal('disclaimer-modal'));
+                    this._on('close-scale-modal', 'click', () => this._hideModal('scale-modal'));
+                    this._on('scale-prev-btn', 'click', () => this._navigateScale(-1));
+                    this._on('scale-next-btn', 'click', () => this._navigateScale(1));
+                    this._on('scale-submit-btn', 'click', () => this._submitScale());
+                    this._on('send-btn', 'click', () => this.sendMessage());
+
+                    // 消息输入框事件
+                    const msgInput = this.els['message-input'];
+                    if (msgInput) {
+                        msgInput.addEventListener('input', (e) => {
+                            const len = e.target.value.length;
+                            if (this.els['char-count']) this.els['char-count'].textContent =
+                                `${len}/${CONFIG.MAX_MESSAGE_LENGTH}`;
+                            if (this.els['send-btn']) this.els['send-btn'].disabled = !(len > 0 && len <= CONFIG
+                                .MAX_MESSAGE_LENGTH);
+                        });
+                        msgInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e
+                                .preventDefault();
+                                this.sendMessage(); } });
                     }
-                    if (this.els.fileInput) {
-                        this.els.fileInput.addEventListener('change', (e) => { if (e.target.files.length) this
+
+                    // 上传区域事件
+                    const uploadZone = this.els['upload-zone'];
+                    const fileInput = this.els['file-input'];
+                    if (uploadZone && fileInput) {
+                        uploadZone.addEventListener('click', () => fileInput.click());
+                        uploadZone.addEventListener('dragover', (e) => { e.preventDefault();
+                            uploadZone.style.borderColor = '#5B8C5A'; });
+                        uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor =
+                            '#D0C8BC'; });
+                        uploadZone.addEventListener('drop', (e) => { e.preventDefault();
+                            uploadZone.style.borderColor = '#D0C8BC'; if (e.dataTransfer.files
+                                .length) this._handleFileUpload(e.dataTransfer.files[0]); });
+                        fileInput.addEventListener('change', (e) => { if (e.target.files.length) this
                                 ._handleFileUpload(e.target.files[0]); });
                     }
-                    if (this.els.sidebarToggle) {
-                        this.els.sidebarToggle.addEventListener('click', () => { if (this.els.sidebar) this.els
-                                .sidebar.classList.toggle('hidden'); });
+
+                    // 侧边栏切换
+                    const sidebarToggle = this.els['sidebar-toggle'];
+                    const sidebar = this.els['sidebar'];
+                    if (sidebarToggle && sidebar) {
+                        sidebarToggle.addEventListener('click', () => { sidebar.classList.toggle('hidden'); });
                     }
-                    if (this.els.saveTechPrefs) {
-                        this.els.saveTechPrefs.addEventListener('click', () => this._saveTechPreferences());
+
+                    // 保存技术偏好
+                    const saveTechPrefs = this.els['save-tech-prefs'];
+                    if (saveTechPrefs) {
+                        saveTechPrefs.addEventListener('click', () => this._saveTechPreferences());
                     }
                 }
 
-                _on(elKey, event, handler) { const el = this.els[elKey]; if (el) el.addEventListener(event,
-                    handler); }
+                _on(elKey, event, handler) {
+                    const el = this.els[elKey];
+                    if (el) {
+                        el.addEventListener(event, handler);
+                    } else {
+                        // 调试：如果元素未找到，尝试驼峰形式再查找
+                        const camelKey = toCamelCase(elKey);
+                        const altEl = this.els[camelKey];
+                        if (altEl) {
+                            altEl.addEventListener(event, handler);
+                        }
+                    }
+                }
+
                 _showModal(key) { const el = this.els[key]; if (el) el.classList.remove('hidden'); }
                 _hideModal(key) { const el = this.els[key]; if (el) el.classList.add('hidden'); }
 
@@ -1158,12 +1193,12 @@
                     this._toggleAuthForms(true); }
                 hideAuthModal() { this._hideModal('auth-modal'); }
                 _toggleAuthForms(showLogin) {
-                    if (this.els.loginForm) this.els.loginForm.classList.toggle('hidden', !showLogin);
-                    if (this.els.registerForm) this.els.registerForm.classList.toggle('hidden', showLogin);
+                    if (this.els['login-form']) this.els['login-form'].classList.toggle('hidden', !showLogin);
+                    if (this.els['register-form']) this.els['register-form'].classList.toggle('hidden', showLogin);
                 }
                 async login() {
-                    const u = this.els.loginUsername?.value?.trim();
-                    const p = this.els.loginPassword?.value;
+                    const u = this.els['login-username']?.value?.trim();
+                    const p = this.els['login-password']?.value;
                     if (!u || !p) { this.showNotification('⚠️', '请填写用户名和密码'); return; }
                     try {
                         const resp = await this.api.login({ username: u, password: p });
@@ -1176,10 +1211,11 @@
                     } catch { this.showNotification('⚠️', '登录失败，请检查网络'); }
                 }
                 async register() {
-                    const data = { username: this.els.regUsername?.value?.trim(), password: this.els.regPassword
-                            ?.value, name: this.els.regName?.value?.trim(), age: parseInt(this.els.regAge
+                    const data = { username: this.els['reg-username']?.value?.trim(), password: this.els[
+                            'reg-password'
+                        ]?.value, name: this.els['reg-name']?.value?.trim(), age: parseInt(this.els['reg-age']
                             ?.value) || null,
-                        gender: this.els.regGender?.value || null };
+                        gender: this.els['reg-gender']?.value || null };
                     if (!data.username || !data.password) { this.showNotification('⚠️', '请填写用户名和密码'); return; }
                     try {
                         const resp = await this.api.register(data);
@@ -1204,32 +1240,33 @@
 
                 // ============ UI更新 ============
                 async updateUIAfterLogin() {
-                    if (this.els.guestContent) this.els.guestContent.classList.add('hidden');
-                    if (this.els.appContent) this.els.appContent.classList.remove('hidden');
-                    if (this.els.sidebar) this.els.sidebar.classList.remove('hidden');
-                    if (this.els.loginBtn) this.els.loginBtn.classList.add('hidden');
-                    if (this.els.logoutBtn) this.els.logoutBtn.classList.remove('hidden');
-                    if (this.els.userInfo) this.els.userInfo.classList.remove('hidden');
-                    if (this.els.currentUserName) this.els.currentUserName.textContent = this.state.currentUser
+                    if (this.els['guest-content']) this.els['guest-content'].classList.add('hidden');
+                    if (this.els['app-content']) this.els['app-content'].classList.remove('hidden');
+                    if (this.els['sidebar']) this.els['sidebar'].classList.remove('hidden');
+                    if (this.els['login-btn']) this.els['login-btn'].classList.add('hidden');
+                    if (this.els['logout-btn']) this.els['logout-btn'].classList.remove('hidden');
+                    if (this.els['user-info']) this.els['user-info'].classList.remove('hidden');
+                    if (this.els['current-user-name']) this.els['current-user-name'].textContent = this.state
+                        .currentUser
                         ?.name || this.state.currentUser?.username || '用户';
-                    if (this.els.userBadge) this.els.userBadge.textContent = '已登录';
+                    if (this.els['user-badge']) this.els['user-badge'].textContent = '已登录';
                     this._renderScaleMenu();
                     this._renderTechTags();
                     this._renderUploadedFiles();
                     this._updateProfilePanel();
-                    if (this.els.saveTechPrefs) this.els.saveTechPrefs.classList.remove('hidden');
+                    if (this.els['save-tech-prefs']) this.els['save-tech-prefs'].classList.remove('hidden');
                 }
                 updateUIAfterLogout() {
-                    if (this.els.guestContent) this.els.guestContent.classList.remove('hidden');
-                    if (this.els.appContent) this.els.appContent.classList.add('hidden');
-                    if (this.els.loginBtn) this.els.loginBtn.classList.remove('hidden');
-                    if (this.els.logoutBtn) this.els.logoutBtn.classList.add('hidden');
-                    if (this.els.userInfo) this.els.userInfo.classList.add('hidden');
+                    if (this.els['guest-content']) this.els['guest-content'].classList.remove('hidden');
+                    if (this.els['app-content']) this.els['app-content'].classList.add('hidden');
+                    if (this.els['login-btn']) this.els['login-btn'].classList.remove('hidden');
+                    if (this.els['logout-btn']) this.els['logout-btn'].classList.add('hidden');
+                    if (this.els['user-info']) this.els['user-info'].classList.add('hidden');
                 }
 
                 // ============ 量表菜单 ============
                 _renderScaleMenu() {
-                    const container = this.els.scaleMenuList;
+                    const container = this.els['scale-menu-list'];
                     if (!container) return;
                     container.innerHTML = '';
                     Object.values(SCALE_REGISTRY).forEach(cfg => {
@@ -1261,14 +1298,13 @@
                     if (!cfg) return;
                     this.currentScaleId = scaleId;
                     this.currentScalePage = 0;
-                    // 恢复进度
                     const progKey = CONFIG.SCALE_PROGRESS_PREFIX + scaleId + '_' + (this.state.currentUser
                         ?.username || '');
                     const saved = storage.get(progKey);
                     this.currentScaleAnswers = saved?.answers || {};
                     if (saved?.page) this.currentScalePage = saved.page;
                     this._showModal('scale-modal');
-                    if (this.els.scaleModalTitle) this.els.scaleModalTitle.textContent = '📋 ' + cfg.name;
+                    if (this.els['scale-modal-title']) this.els['scale-modal-title'].textContent = '📋 ' + cfg.name;
                     this._renderScalePage();
                 }
 
@@ -1307,16 +1343,17 @@
                         html += '</div></div>';
                     });
 
-                    if (this.els.scaleModalBody) this.els.scaleModalBody.innerHTML = html;
-                    if (this.els.scaleProgressInfo) this.els.scaleProgressInfo.textContent =
+                    if (this.els['scale-modal-body']) this.els['scale-modal-body'].innerHTML = html;
+                    if (this.els['scale-progress-info']) this.els['scale-progress-info'].textContent =
                         `第 ${page+1}/${totalPages} 页 · 共 ${allQuestions.length} 题`;
-                    if (this.els.scalePrevBtn) this.els.scalePrevBtn.classList.toggle('hidden', page === 0);
-                    if (this.els.scaleNextBtn) this.els.scaleNextBtn.classList.toggle('hidden', page >= totalPages -
+                    if (this.els['scale-prev-btn']) this.els['scale-prev-btn'].classList.toggle('hidden', page === 0);
+                    if (this.els['scale-next-btn']) this.els['scale-next-btn'].classList.toggle('hidden', page >=
+                        totalPages -
                         1);
-                    if (this.els.scaleSubmitBtn) this.els.scaleSubmitBtn.classList.toggle('hidden', page < totalPages -
+                    if (this.els['scale-submit-btn']) this.els['scale-submit-btn'].classList.toggle('hidden', page <
+                        totalPages -
                         1);
 
-                    // 监听答案变化
                     const handler = (e) => {
                         if (e.detail?.qid) {
                             this.currentScaleAnswers[e.detail.qid] = e.detail.val;
@@ -1352,7 +1389,6 @@
                     }
                     const result = cfg.scoring(this.currentScaleAnswers);
                     this.state.setScaleResult(this.currentScaleId, result);
-                    // 清除进度
                     const uname = this.state.currentUser?.username || '';
                     storage.remove(CONFIG.SCALE_PROGRESS_PREFIX + this.currentScaleId + '_' + uname);
                     this.currentScaleAnswers = {};
@@ -1366,7 +1402,7 @@
 
                 // ============ 咨询技术 ============
                 _renderTechTags() {
-                    const container = this.els.techTagsContainer;
+                    const container = this.els['tech-tags-container'];
                     if (!container) return;
                     container.innerHTML = '';
                     COUNSELING_TECHNIQUES.forEach(tech => {
@@ -1384,7 +1420,7 @@
                 }
 
                 _updateTechPreferencesFromUI() {
-                    const tags = this.els.techTagsContainer?.querySelectorAll('.tech-tag.selected');
+                    const tags = this.els['tech-tags-container']?.querySelectorAll('.tech-tag.selected');
                     if (!tags) return;
                     const selected = Array.from(tags).map((t, i) => {
                         const tech = COUNSELING_TECHNIQUES[i];
@@ -1415,7 +1451,7 @@
                 }
 
                 _renderUploadedFiles() {
-                    const container = this.els.uploadedFilesList;
+                    const container = this.els['uploaded-files-list'];
                     if (!container) return;
                     container.innerHTML = '';
                     this.state.uploadedFiles.forEach((f, i) => {
@@ -1435,11 +1471,10 @@
 
                 // ============ 用户画像面板 ============
                 _updateProfilePanel() {
-                    const container = this.els.profileContent;
+                    const container = this.els['profile-content'];
                     if (!container) return;
                     const profile = this.state.buildUserProfile();
                     let html = '';
-                    // 基本信息
                     html +=
                         '<div class="profile-section"><h4>👤 基本信息</h4><div class="flex flex-wrap gap-1">';
                     if (profile.basic.name) html +=
@@ -1448,7 +1483,6 @@
                     if (profile.basic.gender) html +=
                         `<span class="profile-tag">性别：${profile.basic.gender==='male'?'男':profile.basic.gender==='female'?'女':'其他'}</span>`;
                     html += '</div></div>';
-                    // 量表结果
                     html += '<div class="profile-section"><h4>📋 测量结果</h4>';
                     const scaleKeys = Object.keys(profile.scales);
                     if (scaleKeys.length === 0) {
@@ -1464,7 +1498,6 @@
                         });
                     }
                     html += '</div>';
-                    // 咨询技术
                     html += '<div class="profile-section"><h4>🎯 咨询偏好</h4>';
                     if (profile.techPrefs.length === 0) {
                         html += '<p class="text-xs text-[#B0A89C]">未选择咨询技术</p>';
@@ -1475,7 +1508,6 @@
                         html += '</div>';
                     }
                     html += '</div>';
-                    // 病历文件
                     html += '<div class="profile-section"><h4>📁 病历资料</h4>';
                     if (profile.files.length === 0) {
                         html += '<p class="text-xs text-[#B0A89C]">未上传病历</p>';
@@ -1490,7 +1522,7 @@
                 // ============ 对话 ============
                 async sendMessage() {
                     if (this.isSending) return;
-                    const msgEl = this.els.messageInput;
+                    const msgEl = this.els['message-input'];
                     if (!msgEl) return;
                     const msg = msgEl.value.trim();
                     if (!msg || msg.length > CONFIG.MAX_MESSAGE_LENGTH) return;
@@ -1499,9 +1531,9 @@
                     this.isSending = true;
                     this._addMessage(msg, true);
                     msgEl.value = '';
-                    if (this.els.charCount) this.els.charCount.textContent = `0/${CONFIG.MAX_MESSAGE_LENGTH}`;
-                    if (this.els.sendBtn) this.els.sendBtn.disabled = true;
-                    if (this.els.chatStatus) this.els.chatStatus.textContent = '正在输入...';
+                    if (this.els['char-count']) this.els['char-count'].textContent = `0/${CONFIG.MAX_MESSAGE_LENGTH}`;
+                    if (this.els['send-btn']) this.els['send-btn'].disabled = true;
+                    if (this.els['chat-status']) this.els['chat-status'].textContent = '正在输入...';
                     this._showTyping();
                     const profile = this.state.buildUserProfile();
                     const profileSummary = this.state.getProfileSummary();
@@ -1516,23 +1548,23 @@
                                     aiContent = r.content; }
                                 fullContent += chunk;
                                 if (aiContent) aiContent.innerHTML = renderMarkdown(fullContent);
-                                if (this.els.chatContainer) this.els.chatContainer.scrollTop = this.els
-                                    .chatContainer.scrollHeight;
+                                if (this.els['chat-container']) this.els['chat-container'].scrollTop = this.els[
+                                    'chat-container'].scrollHeight;
                             },
-                            () => { if (this.els.chatStatus) this.els.chatStatus.textContent =
+                            () => { if (this.els['chat-status']) this.els['chat-status'].textContent =
                                     '在线 · 等待对话'; },
                             (err) => { this._hideTyping(); this._addMessage(err ||
-                                    '抱歉，我暂时无法回复，请稍后再试。', false); if (this.els.chatStatus) this.els
-                                    .chatStatus.textContent = '在线 · 等待对话'; }
+                                    '抱歉，我暂时无法回复，请稍后再试。', false); if (this.els['chat-status']) this.els[
+                                    'chat-status'].textContent = '在线 · 等待对话'; }
                         );
                     } catch { this._hideTyping();
-                        this._addMessage('网络连接失败，请检查网络后重试。', false); if (this.els.chatStatus) this.els.chatStatus
-                            .textContent = '在线 · 等待对话'; } finally { this.isSending = false; if (this.els.sendBtn) this
-                            .els.sendBtn.disabled = true; }
+                        this._addMessage('网络连接失败，请检查网络后重试。', false); if (this.els['chat-status']) this.els['chat-status']
+                            .textContent = '在线 · 等待对话'; } finally { this.isSending = false; if (this.els['send-btn']) this
+                            .els['send-btn'].disabled = true; }
                 }
 
                 _addMessage(content, isUser) {
-                    const container = this.els.chatContainer;
+                    const container = this.els['chat-container'];
                     if (!container) return;
                     const div = dom.create('div',
                         `${isUser?'chat-bubble-user':'chat-bubble-ai'} animate-fade-in`);
@@ -1544,16 +1576,17 @@
                     container.scrollTop = container.scrollHeight;
                 }
                 _showTyping() {
-                    const container = this.els.chatContainer;
+                    const container = this.els['chat-container'];
                     if (!container) return;
-                    const el = dom.create('div', 'chat-bubble-ai', '<span class="text-sm text-[#B0A89C]">正在思考...</span>');
+                    const el = dom.create('div', 'chat-bubble-ai',
+                        '<span class="text-sm text-[#B0A89C]">正在思考...</span>');
                     el.id = 'typing-indicator';
                     container.appendChild(el);
                     container.scrollTop = container.scrollHeight;
                 }
                 _hideTyping() { const el = dom.get('typing-indicator'); if (el) el.remove(); }
                 _createStreamingDiv() {
-                    const container = this.els.chatContainer;
+                    const container = this.els['chat-container'];
                     if (!container) return { div: null, content: null };
                     const div = dom.create('div', 'chat-bubble-ai animate-fade-in');
                     div.innerHTML =
@@ -1565,9 +1598,9 @@
 
                 // ============ 通知 ============
                 showNotification(icon, msg) {
-                    const toast = this.els.notificationToast;
-                    const text = this.els.notificationText;
-                    const iconEl = this.els.notificationIcon;
+                    const toast = this.els['notification-toast'];
+                    const text = this.els['notification-text'];
+                    const iconEl = this.els['notification-icon'];
                     if (!toast || !text) return;
                     if (iconEl) iconEl.textContent = icon;
                     text.textContent = msg;
