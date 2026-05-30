@@ -434,14 +434,12 @@
                 </div>
                 <div id="register-form" class="space-y-4 hidden">
                     <h4 class="font-semibold text-[#2D4059]">注册新账户</h4>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label for="reg-username" class="block text-sm text-[#4A5568] mb-1">用户名</label><input type="text" id="reg-username" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="用户名" autocomplete="username"></div>
-                        <div><label for="reg-password" class="block text-sm text-[#4A5568] mb-1">密码</label><input type="password" id="reg-password" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="密码" autocomplete="new-password"></div>
-                    </div>
-                    <div><label for="reg-name" class="block text-sm text-[#4A5568] mb-1">姓名（选填）</label><input type="text" id="reg-name" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="您的称呼"></div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label for="reg-age" class="block text-sm text-[#4A5568] mb-1">年龄</label><input type="number" id="reg-age" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="年龄" min="10" max="100"></div>
-                        <div><label for="reg-gender" class="block text-sm text-[#4A5568] mb-1">性别</label><select id="reg-gender" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm"><option value="">请选择</option><option value="male">男</option><option value="female">女</option><option value="other">其他</option></select></div>
+                    <div><label for="reg-username" class="block text-sm text-[#4A5568] mb-1">账号</label><input type="text" id="reg-username" class="w-full border border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm" placeholder="请输入账号" autocomplete="username"></div>
+                    <div><label for="reg-password" class="block text-sm text-[#4A5568] mb-1">密码</label><input type="password" id="reg-password" oninput="checkRegPasswordMatch()" class="w-full border-2 border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm transition-colors duration-200" placeholder="请输入密码" autocomplete="new-password"></div>
+                    <div>
+                        <label for="reg-confirm-password" class="block text-sm text-[#4A5568] mb-1">确认密码</label>
+                        <input type="password" id="reg-confirm-password" oninput="checkRegPasswordMatch()" class="w-full border-2 border-[#E8E0D8] rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#5B8C5A] text-sm transition-colors duration-200" placeholder="请再次输入密码" autocomplete="new-password">
+                        <p id="reg-password-match-hint" class="text-sm font-medium mt-1.5 px-2 py-1 rounded hidden"></p>
                     </div>
                     <button id="submit-register" class="btn-primary w-full py-3" style="background:#7EC8A0;">注册</button>
                     <div class="text-center"><button id="switch-to-login" class="text-[#5B8C5A] text-sm hover:underline">已有账户？立即登录</button></div>
@@ -1058,6 +1056,40 @@
                 }
             }
 
+            // ==================== 全局函数：注册密码实时校验 ====================
+            // 通过 HTML oninput 内联调用，必须挂 window
+            window.checkRegPasswordMatch = function () {
+                const pInput = document.getElementById('reg-password');
+                const cInput = document.getElementById('reg-confirm-password');
+                const hint = document.getElementById('reg-password-match-hint');
+                if (!hint || !cInput || !pInput) return;
+
+                const pw = pInput.value || '';
+                const cpw = cInput.value || '';
+
+                if (!cpw) {
+                    hint.classList.add('hidden');
+                    pInput.style.borderColor = '';
+                    cInput.style.borderColor = '';
+                    return;
+                }
+
+                hint.classList.remove('hidden');
+                if (pw === cpw) {
+                    hint.textContent = '✅ 密码一致';
+                    hint.style.color = '#5B8C5A';
+                    hint.style.backgroundColor = '#EEF7EE';
+                    pInput.style.borderColor = '#5B8C5A';
+                    cInput.style.borderColor = '#5B8C5A';
+                } else {
+                    hint.textContent = '❌ 两次输入的密码不一致，请重新输入';
+                    hint.style.color = '#C0392B';
+                    hint.style.backgroundColor = '#FDEDEC';
+                    pInput.style.borderColor = '#C0392B';
+                    cInput.style.borderColor = '#C0392B';
+                }
+            };
+
             // ==================== UI管理器 ====================
             class UIManager {
                 constructor(state) {
@@ -1078,7 +1110,7 @@
                         'auth-modal', 'login-btn', 'logout-btn', 'guest-login-btn', 'close-auth',
                         'login-form', 'register-form', 'switch-to-register', 'switch-to-login',
                         'submit-login', 'submit-register', 'login-username', 'login-password',
-                        'reg-username', 'reg-password', 'reg-name', 'reg-age', 'reg-gender',
+                        'reg-username', 'reg-password', 'reg-confirm-password',
                         'guest-content', 'app-content', 'sidebar', 'user-info', 'current-user-name',
                         'user-badge', 'scale-menu-list', 'tech-tags-container', 'save-tech-prefs',
                         'upload-zone', 'file-input', 'uploaded-files-list', 'show-disclaimer-btn',
@@ -1195,6 +1227,17 @@
                 _toggleAuthForms(showLogin) {
                     if (this.els['login-form']) this.els['login-form'].classList.toggle('hidden', !showLogin);
                     if (this.els['register-form']) this.els['register-form'].classList.toggle('hidden', showLogin);
+                    // 切换表单时重置密码匹配提示
+                    this._resetPasswordMatchHint();
+                }
+                _checkPasswordMatch() { window.checkRegPasswordMatch(); }
+                _resetPasswordMatchHint() {
+                    const hint = this.els['reg-password-match-hint'] || document.getElementById('reg-password-match-hint');
+                    const pInput = this.els['reg-password'] || document.getElementById('reg-password');
+                    const cInput = this.els['reg-confirm-password'] || document.getElementById('reg-confirm-password');
+                    if (hint) { hint.classList.add('hidden'); hint.style.color = ''; hint.style.backgroundColor = ''; }
+                    if (pInput) pInput.style.borderColor = '';
+                    if (cInput) cInput.style.borderColor = '';
                 }
                 async login() {
                     const u = this.els['login-username']?.value?.trim();
@@ -1211,12 +1254,13 @@
                     } catch { this.showNotification('⚠️', '登录失败，请检查网络'); }
                 }
                 async register() {
-                    const data = { username: this.els['reg-username']?.value?.trim(), password: this.els[
-                            'reg-password'
-                        ]?.value, name: this.els['reg-name']?.value?.trim(), age: parseInt(this.els['reg-age']
-                            ?.value) || null,
-                        gender: this.els['reg-gender']?.value || null };
-                    if (!data.username || !data.password) { this.showNotification('⚠️', '请填写用户名和密码'); return; }
+                    const data = {
+                        username: this.els['reg-username']?.value?.trim(),
+                        password: this.els['reg-password']?.value
+                    };
+                    const confirmPassword = this.els['reg-confirm-password']?.value || '';
+                    if (!data.username || !data.password) { this.showNotification('⚠️', '请填写账号和密码'); return; }
+                    if (data.password !== confirmPassword) { this.showNotification('⚠️', '两次输入的密码不一致'); return; }
                     try {
                         const resp = await this.api.register(data);
                         if (resp.success) { this.api.setSession(resp.data.session_token, resp.data.user);
